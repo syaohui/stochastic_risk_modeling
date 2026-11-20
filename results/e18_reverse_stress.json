@@ -1,0 +1,11 @@
+{
+  "EEighteenSdCalm": "1.83",
+  "EEighteenSdStress": "2.04",
+  "EEighteenPCalm": "5.2\\times 10^{-4}",
+  "EEighteenPStress": "1.6\\times 10^{-3}",
+  "EEighteenRatio": "3.1",
+  "EEighteenMcErr": "0.016",
+  "EEighteenEqFour": "-1.89",
+  "EEighteenRateFour": "-1.26",
+  "EEighteenSpreadFour": "1.69"
+}

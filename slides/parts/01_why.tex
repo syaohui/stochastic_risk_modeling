@@ -1,0 +1,57 @@
+\section{Why simulation}
+
+\begin{frame}{Risk is a distribution, and validation needs a truth}
+  \small
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \textbf{Risk measurement} asks for tail quantities of a loss distribution that is rarely available in closed form: portfolios of options, defaults that cluster, exposures that evolve over decades. Monte Carlo simulation is the general tool \citep{glasserman2003monte}.
+      \vspace{0.4em}
+
+      \textbf{Model validation} asks whether a risk number is right. With real data the truth is unknown and samples are short. Simulation from a known model answers the questions validation needs first:
+      \begin{itemize}
+        \item How biased and how noisy is the estimator?
+        \item What is the size and the power of the test?
+        \item How large is the error of the approximation?
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \textbf{Where regulation relies on it}
+      \vspace{0.2em}
+
+      \footnotesize
+      \begin{tabular}{L{0.36\textwidth}L{0.5\textwidth}}
+        \toprule
+        Area & Simulated quantity \\
+        \midrule
+        Market risk (FRTB IMA) & 97.5\% ES, 10-day, stress-calibrated \\
+        Default risk charge & 99.9\% one-year VaR, two systematic factors \\
+        Credit (IRB) & 99.9\% quantile of a one-factor model, in closed form \\
+        Counterparty (IMM) & exposure profiles, EEPE, $\alpha = 1.4$ \\
+        Stress testing & scenario losses \\
+        \bottomrule
+      \end{tabular}
+      \vspace{0.3em}
+
+      \small Sources: Basel Framework MAR32, MAR33; BCBS (2005).
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Notation used throughout}
+  \centering\footnotesize
+  \begin{tabular}{lll@{\hspace{0.6em}}lll}
+    \toprule
+    Symbol & Meaning & Unit & Symbol & Meaning & Unit \\
+    \midrule
+    $L$ & loss (positive = money lost) & currency & $p$ & tail probability $1-\alpha$ & \\
+    $\alpha$ & confidence level & & $p_i$, PD & default probability (one year) & \\
+    $\VaR_\alpha$ & value-at-risk & currency & $\rho$ & asset correlation & \\
+    $\ES_\alpha$ & expected shortfall & currency & $\lambda$ & intensity (defaults, losses) & 1/year \\
+    $\sigma_t$ & daily return volatility & fraction & $V(t)$, $EE(t)$ & value, expected exposure & currency \\
+    $n$ & sample or window length & days & $\xi$ & tail index & \\
+    \bottomrule
+  \end{tabular}
+  \vspace{0.8em}
+
+  \raggedright An empty unit cell marks a dimensionless quantity. Returns are fractions of value. Each slide defines its local symbols.
+\end{frame}

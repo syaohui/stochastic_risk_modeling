@@ -1,0 +1,191 @@
+\documentclass[aspectratio=169,10pt]{beamer}
+\newcommand{\reporoot}{../..}
+\input{../preamble}
+
+\title{Market Risk: VaR and Expected Shortfall}
+\subtitle{Definitions, FRTB rules, estimators, and what simulation shows about them}
+\decknumber{1}
+
+\begin{document}
+
+\maketitle
+
+\begin{frame}{The question}
+  \small
+  \begin{columns}[T]
+    \begin{column}{0.55\textwidth}
+      A trading book's loss over the next day or ten days is random. \hl{One number must summarize its tail, be estimated from a few hundred days of data, and hold up in front of a regulator.}
+      \begin{itemize}
+        \item Which number: value-at-risk (VaR) or expected shortfall (ES)?
+        \item Which estimator: historical, parametric, filtered, extreme value?
+        \item How to go from one day to ten days, and to longer liquidity horizons?
+      \end{itemize}
+      Simulation answers these where the truth is known: we generate returns from a model, so the true risk is known, and we measure how each estimator misses it.
+    \end{column}
+    \begin{column}{0.42\textwidth}
+      \begin{alertblock}{In this deck}
+        \small
+        \begin{enumerate}
+          \item VaR, ES, coherence, elicitability.
+          \item The FRTB internal models rules.
+          \item Five estimators against the truth.
+          \item Square-root-of-time scaling.
+        \end{enumerate}
+      \end{alertblock}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{The moving target: one simulated year of market risk}
+  \centering
+  \includegraphics[width=0.95\textwidth,height=0.54\textheight,keepaspectratio]{gallery/g01_market_risk.png}\par\vspace{0.4em}
+  \footnotesize\raggedright
+  (a) One simulated year of GARCH-t daily returns $r_t$ (Student $t_5$ innovations, unconditional volatility 1.2\% a day) inside the true conditional 99\% VaR band: \GalOneExceptions{} exceptions, while volatility varies by a factor of \GalOneVolRatio. (b) The true one-day loss density on every tenth day, on a log scale; red marks losses beyond that day's 99\% VaR.
+\end{frame}
+
+\begin{frame}{VaR and ES}
+  \small
+  Let $L$ be the loss over the horizon (currency; positive is a loss) and $\alpha \in (0,1)$ the confidence level.
+  \[ \VaR_\alpha(L) = \inf\{x : P(L \le x) \ge \alpha\}, \qquad \ES_\alpha(L) = \frac{1}{1-\alpha}\int_\alpha^1 \VaR_u(L)\,\dd u . \]
+  For a continuous loss, $\ES_\alpha = \E[L \mid L \ge \VaR_\alpha]$: the average loss on the worst $1-\alpha$ of days.
+  \vspace{0.3em}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \textbf{Coherence.} A risk measure is coherent if it is monotone, sub-additive, positively homogeneous and translation invariant \citep{artzner1999coherent}. ES is coherent \citep{acerbi2002coherence}; VaR is not sub-additive, so merging two books can raise VaR.
+      \vspace{0.3em}
+
+      \textbf{Closed forms} with $z = \Phi^{-1}(\alpha)$, $q = t_\nu^{-1}(\alpha)$:
+      \[ \ES^{\mathcal N(\mu,\sigma^2)}_\alpha = \mu + \sigma\frac{\varphi(z)}{1-\alpha}, \quad \ES^{t_\nu}_\alpha = \frac{g_\nu(q)}{1-\alpha}\,\frac{\nu+q^2}{\nu-1}, \]
+      with $\varphi$ and $g_\nu$ the normal and Student $t$ densities.
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \textbf{Elicitability.} VaR is the minimizer of an expected scoring function (the quantile loss), so forecasts can be compared by a score. ES alone is not elicitable \citep{gneiting2011making}, but the pair (VaR, ES) is jointly elicitable \citep{fissler2016higher}.
+      \vspace{0.3em}
+
+      Consequence for validation: ES can be backtested, but tests use the VaR forecast too. Deck 2.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{The FRTB internal models approach}
+  \small
+  \begin{columns}[T]
+    \begin{column}{0.52\textwidth}
+      \textbf{Capital measure} \citep{bcbs2023mar33}:
+      \begin{itemize}
+        \item ES at a 97.5\% one-tailed level (MAR33.3);
+        \item base horizon $T = 10$ days, liquidity horizons $LH_j = 10, 20, 40, 60, 120$ days (MAR33.4);
+        \item calibrated to a 12-month stress period through a reduced set of risk factors that explains at least 75\% of the full ES (MAR33.5);
+        \item default risk charge: one-year VaR at 99.9\% with two types of systematic factors;
+        \item multiplier $m_c = 1.5$ plus a backtesting add-on of 0 to 0.5.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.47\textwidth}
+      \textbf{Liquidity-adjusted ES} (MAR33.4): with $\ES_T(P,j)$ the 10-day ES of shocks to risk factors whose horizon is at least $LH_j$,
+      \[ \ES^2 = \ES_T(P)^2 + \sum_{j\ge 2}\ES_T(P,j)^2\,\frac{LH_j - LH_{j-1}}{T}. \]
+      \textbf{Derived here:} for independent risk-factor classes with Gaussian P\&L scaling like $\sqrt{t}$, the cascade equals the ES of each class scaled to its own horizon (checked in the tests). With correlated classes it is a convention, not a theorem.
+    \end{column}
+  \end{columns}
+  \vspace{0.2em}
+  \footnotesize Backtesting at 99\% and 97.5\% VaR and the P\&L attribution test decide which desks may use the model (deck 2). In the EU these rules apply from 1 January 2027.
+\end{frame}
+
+\begin{frame}{Five estimators}
+  \small
+  Returns $r_t$ (fraction of value), losses $L = -r$, window of $n = \EOneW$ days.
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \begin{itemize}
+        \item \textbf{Historical simulation (HS)}: empirical VaR and ES of the window.
+        \item \textbf{Normal}: mean and standard deviation of the window.
+        \item \textbf{GARCH(1,1)}: $r_t = \sigma_t z_t$,
+        \[ \sigma_t^2 = \omega + a\,r_{t-1}^2 + b\,\sigma_{t-1}^2, \]
+        $\omega$ (per day), $a, b \ge 0$, $a + b < 1$, $z_t$ i.i.d.\ with unit variance (Student $t$, $\nu$ degrees of freedom). Fitted by maximum likelihood.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \begin{itemize}
+        \item \textbf{GARCH-t}: $\hat\sigma_{t+1}$ times the fitted $t$ quantiles.
+        \item \textbf{Filtered HS}: $\hat\sigma_{t+1}$ times empirical quantiles of the standardized losses $-r_s/\hat\sigma_s$.
+        \item \textbf{GARCH-EVT} \citep{mcneil2000estimation}: a generalized Pareto tail (shape $\xi$, scale $\beta$) on standardized losses above threshold $u$,
+        \[ \VaR_\alpha = u + \tfrac{\beta}{\xi}\Big[\big(\tfrac{n(1-\alpha)}{N_u}\big)^{-\xi} - 1\Big], \]
+        $\ES_\alpha = (\VaR_\alpha + \beta - \xi u)/(1-\xi)$, with $N_u$ exceedances.
+      \end{itemize}
+    \end{column}
+  \end{columns}
+  \vspace{0.2em}
+  \footnotesize The first two estimate unconditional risk; the last three track today's volatility.
+\end{frame}
+
+\begin{frame}{Which estimator tracks the truth}
+  \centering
+  \includegraphics[width=0.86\textwidth]{fig01_estimators.png}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \footnotesize
+      Truth: GARCH-t with $a = 0.08$, $b = 0.90$, $\nu = 5$, unconditional volatility 1.2\% a day. (a) One path, estimates every 25 days. (b) $\EOneR$ independent windows; boxes show 25\% to 75\%, whiskers 5\% to 95\%.
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \footnotesize
+      RMSE of $\ln(\hat\ES/\ES)$: HS $\EOneRmseESHS$, normal $\EOneRmseESNorm$, FHS $\EOneRmseESFHS$, GARCH-t $\EOneRmseESGT$, GARCH-EVT $\EOneRmseESEVT$. HS is below two thirds of the true ES in $\EOneUnderHalfESHS\%$ of windows, FHS in $\EOneUnderHalfESFHS\%$.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{From one day to ten days}
+  \begin{columns}[c]
+    \begin{column}{0.5\textwidth}
+      \centering
+      \includegraphics[width=\textwidth]{fig02_scaling.png}
+    \end{column}
+    \begin{column}{0.47\textwidth}
+      \small
+      The square-root-of-time rule $\ES_{10} = \sqrt{10}\,\ES_1$ is exact only for i.i.d.\ Gaussian returns. Ten-day ES by Monte Carlo ($\ETwoPaths$ paths per point) over the scaled value:
+      \begin{itemize}
+        \item GARCH-t at half the average volatility: $\ETwoLowT$; at 2.5 times: $\ETwoHighT$. Volatility mean-reverts over ten days, so scaling understates risk in calm markets and overstates it in turbulent ones.
+        \item i.i.d.\ $t_5$: $\ETwoIid$. Sums of fat-tailed returns are less fat-tailed, so scaling overstates.
+      \end{itemize}
+      FRTB measures the 10-day ES directly, with overlapping observations allowed (MAR33.4), and scales only from 10 days to longer horizons.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Discussion and takeaways}
+  \small
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \textbf{What the simulations show}
+      \begin{itemize}
+        \item Unconditional estimators (HS, normal) cannot follow volatility: they are too low after a volatility rise and too high after it fades.
+        \item Conditional estimators reduce the error but carry parameter error from a 500-day fit; the tail model (empirical, $t$, EVT) matters less than the volatility filter here.
+        \item Time scaling depends on the volatility state and on tail thickness.
+      \end{itemize}
+      \textbf{Assumptions.} One asset; GARCH(1,1) is the true model, so conditional estimators are favored. Real data add model misspecification (deck 3).
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \textbf{For a risk manager}
+      \begin{enumerate}
+        \item Prefer ES for capital, but keep VaR: backtests need it.
+        \item Filter volatility before using history; HS reacts slowly.
+        \item Treat any horizon scaling as a model with its own error.
+      \end{enumerate}
+      \textbf{Open questions.} ES estimation for portfolios with many non-linear positions at 97.5\% over stressed periods, with honest error bars; the right correlation treatment in the liquidity-horizon cascade.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Reproduce}
+  \small
+  Code: \texttt{measures.py}, \texttt{volatility.py}, \texttt{evt.py}. Experiments: \texttt{e01\_estimators.py}, \texttt{e02\_scaling.py}.
+\begin{verbatim}
+from stochastic_risk import measures as ms, volatility as vol
+g = vol.Garch(omega=2.88e-6, alpha_g=0.08, beta_g=0.90, nu=5.0)
+r, sigma = g.simulate(500, rng=1)
+fit = vol.fit_garch(r, "t")
+ms.var_es_empirical(-r, 0.975)          # historical simulation (VaR, ES)
+ms.lh_adjusted_es(es_base, es_subsets)  # FRTB liquidity-horizon ES
+\end{verbatim}
+\end{frame}
+
+\deckreferences
+\end{document}

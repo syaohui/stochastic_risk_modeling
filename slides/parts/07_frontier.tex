@@ -1,0 +1,39 @@
+\section{Frontier and open problems}
+
+\begin{frame}{Where the field is moving}
+  \small
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \textbf{Regulation}
+      \begin{itemize}
+        \item US model risk guidance was rewritten in April 2026 (SR 26-2): risk-based, a narrower model definition, generative and agentic AI out of scope for now \citep{fed2026sr262}.
+        \item FRTB applies in the EU from 1 January 2027, after being postponed by the European Commission in 2025.
+      \end{itemize}
+      \textbf{Backtesting expected shortfall}
+      \begin{itemize}
+        \item Joint elicitability \citep{fissler2016higher} gave ES backtests a footing; regression-based tests need only ES forecasts \citep{bayer2022regression}.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \textbf{Generative scenarios}
+      \begin{itemize}
+        \item Tail-GAN trains scenario generators with a VaR-ES elicitable loss, targeting tail risk of trading strategies \citep{cont2022tailgan}.
+        \item Diffusion factor models generate high-dimensional returns with a latent factor structure \citep{chen2025diffusion}.
+      \end{itemize}
+      \textbf{The common thread.} Each new model class needs the same validation machinery: known-truth simulation, tests with known size and power, and error bars. That machinery is what this repository builds.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Open problems}
+  \small
+  \textit{Our synthesis of gaps visible in the experiments and the literature above.}
+  \begin{enumerate}
+    \item \textbf{Backtests with power at one year.} 250 days cannot separate 1\% from 2\% exception rates or detect tail shape; pooling across desks, horizons and levels without breaking test size is open.
+    \item \textbf{Calibration tests under dependence.} Supervisory PD tests assume independent defaults; multi-year, correlation-aware tests with useful power are needed.
+    \item \textbf{Honest error bars for ES and capital.} Bootstrap intervals under-cover in heavy tails; capital from short loss histories varies by a factor of several.
+    \item \textbf{Stress calibration when correlations change.} The FRTB indirect approach is biased low when correlations rise; the 75\% coverage rule limits the bias in simple settings, but how well it does so for real portfolios is untested.
+    \item \textbf{Wrong-way risk from data.} Dependence between exposure and default is decisive for CVA and almost unobserved.
+    \item \textbf{Validating learned models.} Generative scenario models and machine-learned pricing proxies inside risk engines need standards for outcomes analysis and error bounds.
+  \end{enumerate}
+\end{frame}

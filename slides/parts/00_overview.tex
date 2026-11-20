@@ -1,0 +1,24 @@
+\begin{frame}{What this deck covers}
+  \begin{columns}[T]
+    \begin{column}{0.52\textwidth}
+      \footnotesize
+      \begin{enumerate}
+        \setlength{\itemsep}{0pt}
+        \item \textbf{Why simulation.} Risk is a distribution; validation needs a known truth.
+        \item \textbf{Market risk.} VaR, ES, FRTB, estimators, time scaling.
+        \item \textbf{Validation.} VaR and ES backtests, the P\&L attribution test, estimation risk, model uncertainty, SR 26-2.
+        \item \textbf{Credit.} The one-factor model behind Basel capital, tail dependence, rare events, PD model tests.
+        \item \textbf{Counterparty risk and Monte Carlo.} Exposure, CVA, wrong-way risk; nested simulation, variance reduction.
+        \item \textbf{Operational risk and stress testing.} Heavy tails, extreme values, reverse stress tests, regimes.
+        \item \textbf{Frontier and open problems.}
+      \end{enumerate}
+    \end{column}
+    \begin{column}{0.44\textwidth}
+      \begin{alertblock}{How to read the numbers}
+        Every figure and number comes from open code in this repository. In each experiment the true model is known, so every estimator, test and approximation is measured against the truth, with its uncertainty.
+      \end{alertblock}
+      \vspace{0.4em}
+      {\small All parameters are illustrative. Nothing is fitted to market or bank data, and nothing here is regulatory or investment advice. Nine deep-dive decks expand each topic.}
+    \end{column}
+  \end{columns}
+\end{frame}

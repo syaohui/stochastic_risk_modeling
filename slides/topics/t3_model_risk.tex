@@ -1,0 +1,178 @@
+\documentclass[aspectratio=169,10pt]{beamer}
+\newcommand{\reporoot}{../..}
+\input{../preamble}
+
+\title{Model Risk and Estimation Risk}
+\subtitle{SR 26-2, parameter uncertainty, and how wrong a correct model can be}
+\decknumber{3}
+
+\begin{document}
+
+\maketitle
+
+\begin{frame}{The question}
+  \small
+  \begin{columns}[T]
+    \begin{column}{0.55\textwidth}
+      Every risk number comes from a model, and every model is fitted to limited data. \hl{How much of a risk estimate is the risk, and how much is the model and the sample?}
+      \begin{itemize}
+        \item Estimation risk: the right model with estimated parameters.
+        \item Model uncertainty: which model is right at all.
+      \end{itemize}
+      Both can be quantified by simulation and closed forms, and both are what validation teams are asked to challenge.
+    \end{column}
+    \begin{column}{0.42\textwidth}
+      \begin{alertblock}{In this deck}
+        \small
+        \begin{enumerate}
+          \item The 2026 US guidance, SR 26-2.
+          \item Exceedance probability of estimated VaR.
+          \item Sampling error of ES.
+          \item Worst cases and challenger models.
+        \end{enumerate}
+      \end{alertblock}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Estimation error and worst cases, seen directly}
+  \centering
+  \includegraphics[width=0.95\textwidth,height=0.54\textheight,keepaspectratio]{gallery/g03_model_risk.png}\par\vspace{0.4em}
+  \footnotesize\raggedright
+  (a) Sampling distribution of the plug-in normal 99\% VaR over the true VaR for window lengths $n$ (400,000 samples each), with the exact probability that the next loss exceeds it. (b) Worst-case loss distributions within relative entropy $\eta$ of a standard normal: each is the normal shifted by $\sqrt{2\eta}$, and its 97.5\% ES (dots) rises by the same amount.
+\end{frame}
+
+\begin{frame}{SR 26-2: revised guidance on model risk management}
+  \small
+  Issued 17 April 2026 by the Federal Reserve, OCC and FDIC; it \hl{supersedes SR 11-7} (2011) and SR 21-8 \citep{fed2026sr262}.
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \begin{itemize}
+        \item Most relevant to banking organizations with over \$30 billion in total assets; risk-based and tailored.
+        \item A model is a ``complex quantitative method, system, or approach'' that uses statistical, economic or financial theory to turn input data into quantitative estimates. Simple arithmetic and deterministic rules are out.
+        \item Generative and agentic AI models are outside its scope; other AI models are in.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \begin{itemize}
+        \item Model risk depends on inherent risk, exposure, purpose and use; exposure and purpose determine materiality.
+        \item Validation components: conceptual soundness, outcomes analysis (including back-testing), ongoing monitoring.
+        \item Effective challenge: critical analysis by objective experts with the standing to effect change.
+      \end{itemize}
+    \end{column}
+  \end{columns}
+  \vspace{0.3em}
+  This deck makes two of these concrete: outcomes analysis has sampling error, and conceptual soundness needs alternatives to compare against.
+\end{frame}
+
+\begin{frame}{Estimated VaR is exceeded more often than its level says}
+  \small
+  \begin{columns}[T]
+    \begin{column}{0.52\textwidth}
+      \textbf{Normal losses, plug-in VaR.} From $n$ i.i.d.\ normal losses with sample mean $\bar L$ and standard deviation $s$, the next loss satisfies
+      \[ \frac{L_{n+1} - \bar L}{s\sqrt{1 + 1/n}} \sim t_{n-1}, \]
+      so the plug-in VaR $\bar L + s\,z_\alpha$ is exceeded with probability
+      \[ P = 1 - T_{n-1}\!\left(\frac{z_\alpha}{\sqrt{1+1/n}}\right) > 1 - \alpha. \]
+      The predictive VaR $\bar L + s\sqrt{1+1/n}\;t^{-1}_{n-1}(\alpha)$ has exact coverage.
+    \end{column}
+    \begin{column}{0.45\textwidth}
+      \textbf{Historical simulation.} If VaR is the $k$-th smallest of $n$ losses, then for any continuous distribution
+      \[ \E[P(L_{n+1} > L_{(k)})] = \frac{n + 1 - k}{n + 1}, \]
+      because $F(L_{(k)})$ is the $k$-th uniform order statistic. With $n = 250$ and $k = 248$: $\ESixHsTwoFifty\%$, not 1\%.
+      \vspace{0.3em}
+
+      Both are standard results; this repository checks them by simulation.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Estimation risk in numbers}
+  \centering
+  \includegraphics[width=0.86\textwidth]{fig06_estimation_risk.png}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \footnotesize
+      (a) Plug-in normal 99\% VaR: exceeded $\ESixPlugTwentyFive\%$ of the time with $n = 25$ and $\ESixPlugTwoFifty\%$ with $n = 250$ (Monte Carlo $\ESixMcTwoFifty\%$); predictive VaR $\ESixPredTwoFifty\%$. HS with the $\lceil 0.99n\rceil$-th order statistic has a sawtooth: $\ESixHsTwoHundred\%$ at $n = 200$.
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \footnotesize
+      (b) Empirical ES$_{97.5}$ from 250 days: relative standard error $\ESixSdNorm\%$ for normal losses and $\ESixSdT\%$ for $t_3$ (bias $\ESixBiasT\%$). 95\% bootstrap intervals cover the truth $\ESixCoverNorm\%$ and $\ESixCoverT\%$ of the time.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Model uncertainty: worst cases and challengers}
+  \small
+  \begin{columns}[T]
+    \begin{column}{0.52\textwidth}
+      \textbf{Relative-entropy worst case} \citep{glasserman2014robust}. Among models $Q$ with $D(Q\,\|\,P) = \E_Q[\ln(\dd Q/\dd P)] \le \eta$, the largest $\E_Q[V]$ is attained by the exponential tilt
+      \[ \frac{\dd Q^*}{\dd P} = \frac{e^{\theta V}}{\E_P[e^{\theta V}]}, \]
+      with $\theta \ge 0$ chosen so that the divergence equals $\eta$. It needs only simulated scenarios from the nominal model: reweight them.
+      \vspace{0.2em}
+
+      Here $V = L$: the model that maximizes expected loss, then its ES. For $L \sim \mathcal N(0,1)$ the tilt is $\mathcal N(\theta, 1)$ with $\theta = \sqrt{2\eta}$, so ES rises by exactly $\theta$. For heavy tails $\E[e^{\theta L}] = \infty$: the tilt does not exist.
+    \end{column}
+    \begin{column}{0.45\textwidth}
+      \textbf{Challenger models.} Validation compares the champion with alternatives fitted to the same data. The spread across reasonable models is a direct measure of model risk for that number.
+      \vspace{0.3em}
+
+      Here: the five estimators of deck 1, each applied to the same 500-day GARCH-t window, for 1,000 windows.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{How large is model risk?}
+  \centering
+  \includegraphics[width=0.94\textwidth]{fig07_model_uncertainty.png}
+  \footnotesize
+  \begin{columns}[T]
+    \begin{column}{0.32\textwidth}
+      (a) Normal losses, 2 million reweighted scenarios: within $\eta = 0.1$ the worst-case ES is $\ESevenWcNormTenth$ times nominal; the largest gap to the exact $\ES + \sqrt{2\eta}$ is $\ESevenWcErr$.
+    \end{column}
+    \begin{column}{0.32\textwidth}
+      (b) Student $t_4$ losses, $\eta = 0.05$: the ``worst case'' is $\ESevenTSmallLo$ to $\ESevenTSmallHi$ times nominal with $10^4$ scenarios and $\ESevenTLargeLo$ to $\ESevenTLargeHi$ with $4\times10^6$. It depends on the largest draws, not on the model.
+    \end{column}
+    \begin{column}{0.32\textwidth}
+      (c) Largest over smallest ES$_{97.5}$ among five estimators on the same window: median $\ESevenSpreadMed$, 90th percentile $\ESevenSpreadNinety$; above 1.5 in $\ESevenSpreadOver\%$ of windows.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Discussion and takeaways}
+  \small
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \textbf{What it means for validation}
+      \begin{itemize}
+        \item Outcomes analysis has its own sampling error: a correctly specified model fitted to 250 days misses its nominal level, and ES estimates from one year carry tens of percent of error.
+        \item Bootstrap intervals for ES from one year cover the truth less often than stated, even for normal losses.
+        \item Model uncertainty can be bounded without a second model (relative entropy), but only for light tails; for heavy tails, measure it against challengers.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \textbf{For a model risk team}
+      \begin{enumerate}
+        \item Quote risk numbers with an estimation error, not as points.
+        \item Use predictive (not plug-in) quantiles when the sample is short.
+        \item Keep at least one challenger per material model and track the spread.
+        \item Express judgmental overlays as a divergence budget, where the tails allow it.
+      \end{enumerate}
+      \textbf{Open questions.} How to set $\eta$ from data and governance, not by hand; worst-case bounds that stay finite for heavy-tailed losses.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Reproduce}
+  \small
+  Code: \texttt{model\_risk.py}. Experiments: \texttt{e06\_estimation\_risk.py}, \texttt{e07\_model\_uncertainty.py}.
+\begin{verbatim}
+from stochastic_risk import model_risk as mr
+mr.plugin_normal_exceedance(n=250, alpha=0.99)    # exact exceedance probability
+mr.predictive_normal_var(losses, 0.99)            # exact coverage
+mr.hs_expected_exceedance(n=250, k=248)           # distribution-free
+mr.worst_case_es(losses, alpha=0.975, eta=0.1)    # Glasserman-Xu tilt (light tails)
+\end{verbatim}
+\end{frame}
+
+\deckreferences
+\end{document}

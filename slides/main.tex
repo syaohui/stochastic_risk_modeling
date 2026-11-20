@@ -1,0 +1,33 @@
+\documentclass[aspectratio=169,10pt]{beamer}
+\newcommand{\reporoot}{..}
+\input{preamble}
+
+\title{Stochastic Simulation for Risk Modeling and Model Validation}
+\subtitle{Market, credit, counterparty and operational risk, with the statistics a validator needs}
+
+\begin{document}
+
+\maketitle
+
+\input{parts/00_overview}
+\input{parts/01_why}
+\input{parts/02_market}
+\input{parts/03_validation}
+\input{parts/04_credit}
+\input{parts/05_ccr_mc}
+\input{parts/06_oprisk_stress}
+\input{parts/07_frontier}
+\input{parts/08_repo}
+
+\appendix
+\input{parts/09_backup}
+
+\begin{frame}[allowframebreaks]{References}
+  \tiny
+  \renewcommand{\bibsection}{}
+  \nocite{mcneil2015quantitative,glasserman2003monte}
+  \bibliographystyle{plainnat}
+  \bibliography{refs}
+\end{frame}
+
+\end{document}

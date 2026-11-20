@@ -1,0 +1,165 @@
+\documentclass[aspectratio=169,10pt]{beamer}
+\newcommand{\reporoot}{../..}
+\input{../preamble}
+
+\title{Credit Portfolio Risk}
+\subtitle{The one-factor model, Basel IRB capital, tail dependence and rare-event simulation}
+\decknumber{4}
+
+\begin{document}
+
+\maketitle
+
+\begin{frame}{The question}
+  \small
+  \begin{columns}[T]
+    \begin{column}{0.55\textwidth}
+      A loan book loses money when many borrowers default together. \hl{How large is the one-in-a-thousand-year loss, and how much does the answer depend on the dependence model and on how we simulate it?}
+      \begin{itemize}
+        \item Basel IRB capital is a closed-form 99.9\% quantile from a one-factor model.
+        \item Economic capital models simulate richer portfolios, where 99.9\% events are rare and plain Monte Carlo is slow.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.42\textwidth}
+      \begin{alertblock}{In this deck}
+        \small
+        \begin{enumerate}
+          \item The one-factor (Vasicek) model.
+          \item The IRB formula and its assumptions.
+          \item Finite portfolios and granularity.
+          \item Copulas and tail dependence.
+          \item Importance sampling.
+        \end{enumerate}
+      \end{alertblock}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Default clustering: the tail and the copula}
+  \centering
+  \includegraphics[width=0.95\textwidth,height=0.54\textheight,keepaspectratio]{gallery/g04_credit_portfolio.png}\par\vspace{0.4em}
+  \footnotesize\raggedright
+  (a) Probability that the default rate of an infinitely granular portfolio with PD 1\% exceeds $x$, against asset correlation $\rho$; red marks the 99.9\% quantile, the Basel capital point. (b, c) 20,000 simulated pairs of obligors (PD 5\%, correlation 0.3) on the uniform scale $U$, lower corner: the same correlation gives \GalFourJointGauss{} joint defaults with a Gaussian copula and \GalFourJointT{} with a Student $t_4$ copula.
+\end{frame}
+
+\begin{frame}{The one-factor model}
+  \small
+  Obligor $i$ defaults within a year when $\sqrt\rho\,Y + \sqrt{1-\rho}\,\varepsilon_i > \Phi^{-1}(1 - p_i)$, with systematic factor $Y$ and idiosyncratic $\varepsilon_i$ independent standard normal (large $Y$ is a bad year), default probability $p_i$ and asset correlation $\rho$ (dimensionless). Given $Y = y$, defaults are independent with
+  \[ p_i(y) = \Phi\!\left(\frac{\Phi^{-1}(p_i) + \sqrt\rho\,y}{\sqrt{1-\rho}}\right). \]
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \textbf{Infinitely granular portfolio.} With equal PD $p$ the default rate is $p(Y)$, so
+      \[ \VaR_q = \Phi\!\left(\frac{\Phi^{-1}(p) + \sqrt\rho\,\Phi^{-1}(q)}{\sqrt{1-\rho}}\right). \]
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \textbf{Why it underpins capital rules.} Capital contributions that do not depend on the rest of the portfolio require a single systematic factor and no large single exposures \citep{gordy2003risk}.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{The Basel IRB formula}
+  \small
+  For corporate exposures, with PD and LGD as decimals and effective maturity $M$ (years) \citep{bcbs2005irb}:
+  \[ R = 0.12\,w + 0.24\,(1 - w), \quad w = \frac{1 - e^{-50\,PD}}{1 - e^{-50}}, \quad b = (0.11852 - 0.05478\ln PD)^2, \]
+  \[ K = \left[LGD\;\Phi\!\left(\frac{\Phi^{-1}(PD)}{\sqrt{1-R}} + \sqrt{\frac{R}{1-R}}\,\Phi^{-1}(0.999)\right) - PD\cdot LGD\right]\frac{1 + (M - 2.5)\,b}{1 - 1.5\,b}. \]
+  \begin{itemize}
+    \item $K$ is capital per unit of exposure at default $EAD$ (currency); risk-weighted assets are $12.5\,K\cdot EAD$. The bracket is the 99.9\% conditional loss minus expected loss, so capital covers unexpected loss.
+    \item Correlation falls from 0.24 to 0.12 as PD rises; the maturity factor anticipates capital needed after downgrades.
+    \item Example: PD 1\%, LGD 45\%, $M = 2.5$: $K = \EEightKOne\%$ of EAD, a risk weight of $\EEightRWOne\%$.
+  \end{itemize}
+  Assumptions: one factor, infinite granularity, Gaussian dependence, fixed LGD. The next slides relax the last three.
+\end{frame}
+
+\begin{frame}{Capital curve and finite portfolios}
+  \centering
+  \includegraphics[width=0.94\textwidth]{fig08_asrf.png}
+  \footnotesize
+  \begin{columns}[T]
+    \begin{column}{0.32\textwidth}
+      (a) IRB capital per unit EAD, LGD 45\%. The maturity adjustment anticipates downgrades and is larger, in relative terms, for low PDs \citep{bcbs2005irb}.
+    \end{column}
+    \begin{column}{0.32\textwidth}
+      (b) PD 1\%, $\rho = 0.12$: the infinitely granular 99.9\% default rate is $\EEightAsrf\%$. With $N = \EEightNHundred$ names the exact value is $\EEightExactHundred\%$; the granularity-adjusted value $\EEightGAHundred\%$.
+    \end{column}
+    \begin{column}{0.32\textwidth}
+      (c) Simulated default counts (500 names, $10^6$ years) against the exact binomial mixture: largest difference $\EEightMcMax$.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Granularity: a second-order correction (derived here)}
+  \small
+  Write $X = \E[L \mid Y] = m(Y)$ and $v(Y) = \Var(L \mid Y)$. Expanding the quantile of $L = X + (L - X)$ to second order and changing variables from $X$ to $Y$ gives
+  \[ \VaR_q(L) \approx m(y_q) + \Delta, \qquad \Delta = -\frac{1}{2h(y)}\,\frac{\dd}{\dd y}\left[\frac{h(y)\,v(y)}{m'(y)}\right]_{y = y_q}, \qquad y_q = \Phi^{-1}(q), \]
+  with $h$ the standard normal density. For $N$ equal names with unit LGD, $m(y) = p(y)$ and $v(y) = p(y)(1 - p(y))/N$, so $\Delta$ is of order $1/N$.
+  \vspace{0.3em}
+  \begin{itemize}
+    \item Checked against the exact binomial mixture (previous slide and tests): at $N = \EEightNThousand$ the exact quantile is $\EEightExactThousand\%$ and the adjusted one $\EEightGAThousand\%$.
+    \item For small $N$ the default rate is discrete (steps of $1/N$), and no smooth correction can match it exactly.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Tail dependence and importance sampling}
+  \centering
+  \includegraphics[width=0.8\textwidth]{fig09_copula_is.png}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \footnotesize
+      (a) 1,000 obligors in five grades, $\rho = 0.15$, LGD 45\%, $\ENineNsim$ simulated years per copula. Same PDs, same $\rho$; a Student $t$ copula divides all latent variables by a common $\sqrt{W/\nu}$, which makes joint defaults more likely. 99.9\% loss: Gaussian $\ENineGaussQ\%$, $t_{10}$ $\ENineTTenQ\%$, $t_4$ $\ENineTFourQ\%$ of exposure ($\ENineRatioTFour$ times Gaussian).
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \footnotesize
+      (b) Importance sampling \citep{glasserman2005importance} shifts the factor mean and twists default probabilities so the target loss is typical, then reweights. At $P(L > x) = 10^{-4}$ with $\ENineNis$ scenarios: relative error $\ENineIsRelHigh\%$ against $\ENineMcRelHigh\%$ for plain Monte Carlo; variance reduction factor $\ENineVrfHigh$ per scenario.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Importance sampling in two steps}
+  \small
+  Exposures $c_i$ (loss given default), loss $L = \sum_i c_i\,\mathbf{1}\{\text{default}_i\}$, target $P(L > x)$.
+  \begin{enumerate}
+    \item \textbf{Twist given the factor.} Replace $p_i(y)$ by $q_i = p_i(y)e^{\theta c_i}/(1 + p_i(y)(e^{\theta c_i} - 1))$, with $\theta = \theta_x(y) \ge 0$ solving $\partial_\theta\psi(\theta, y) = x$, where $\psi(\theta, y) = \sum_i \ln(1 + p_i(y)(e^{\theta c_i} - 1))$ is the conditional cumulant generating function.
+    \item \textbf{Shift the factor.} Draw $Y \sim \mathcal N(\mu, 1)$ with $\mu$ maximizing $\psi(\theta_x(y), y) - \theta_x(y)\,x - y^2/2$, a large-deviation approximation of $\ln[P(L > x \mid y)\,h(y)]$.
+  \end{enumerate}
+  The estimator $\mathbf{1}\{L > x\}\,e^{-\theta L + \psi(\theta, Y)}\,e^{-\mu Y + \mu^2/2}$ is unbiased (checked against the exact distribution in the tests). The first step handles weak dependence, the second strong dependence \citep{glasserman2005importance}.
+\end{frame}
+
+\begin{frame}{Discussion and takeaways}
+  \small
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \textbf{What the experiments show}
+      \begin{itemize}
+        \item The IRB formula is the ASRF quantile with regulatory correlation and maturity adjustments.
+        \item Concentration matters: small portfolios need granularity add-ons, which a second-order expansion captures.
+        \item The copula is a first-order modeling choice: same PDs and correlation, very different 99.9\% loss.
+        \item At 99.9\% and beyond, importance sampling turns an impractical simulation into a routine one.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \textbf{For a credit risk modeler}
+      \begin{enumerate}
+        \item Validate economic capital against the exact one-factor case first.
+        \item Report the copula and correlation sensitivity of capital.
+        \item Use importance sampling for tail quantiles and risk contributions.
+      \end{enumerate}
+      \textbf{Open questions.} Multi-factor capital allocation with stable contributions; stochastic and correlated LGD; calibrating tail dependence from short default histories.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Reproduce}
+  \small
+  Code: \texttt{credit.py}. Experiments: \texttt{e08\_asrf.py}, \texttt{e09\_copula\_is.py}.
+\begin{verbatim}
+from stochastic_risk import credit as cr
+cr.irb_capital(pd=0.01, lgd=0.45, m=2.5)          # 0.0739
+cr.vasicek_quantile(q=0.999, p=0.01, rho=0.12)
+cr.homogeneous_loss_pmf(n=100, p=0.01, rho=0.12)   # exact binomial mixture
+cr.simulate_losses(p, c, rho=0.15, n_sims=10**6, copula="t", nu=4)
+cr.is_tail_probability(p, c, rho=0.15, x=0.05, n_sims=20000)
+\end{verbatim}
+\end{frame}
+
+\deckreferences
+\end{document}

@@ -1,0 +1,152 @@
+\documentclass[aspectratio=169,10pt]{beamer}
+\newcommand{\reporoot}{../..}
+\input{../preamble}
+
+\title{Stress Testing and Scenario Generation}
+\subtitle{Reverse stress tests, regimes, the FRTB stress calibration, and generative scenarios}
+\decknumber{9}
+
+\begin{document}
+
+\maketitle
+
+\begin{frame}{The question}
+  \small
+  \begin{columns}[T]
+    \begin{column}{0.55\textwidth}
+      Statistical risk measures look at the recent past. Stress tests ask what a bad state of the world would do. \hl{Which scenario should we fear, how plausible is it, and how do we calibrate risk to a stress period we no longer observe?}
+      \begin{itemize}
+        \item Reverse stress testing starts from the loss and finds the scenario.
+        \item Risk measures that react to recent data are procyclical.
+        \item FRTB calibrates ES to a stress period through a reduced set of risk factors.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.42\textwidth}
+      \begin{alertblock}{In this deck}
+        \small
+        \begin{enumerate}
+          \item The most likely scenario behind a loss.
+          \item Plausibility under calm and stressed correlations.
+          \item Regimes and procyclicality.
+          \item The FRTB indirect stress calibration.
+          \item Generative scenario models.
+        \end{enumerate}
+      \end{alertblock}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Stress scenarios in three dimensions}
+  \centering
+  \includegraphics[width=0.95\textwidth,height=0.54\textheight,keepaspectratio]{gallery/g09_stress_testing.png}\par\vspace{0.4em}
+  \footnotesize\raggedright
+  (a) 3,000 scenarios of equity, rate and spread moves (standard deviations, calm correlations), coloured by portfolio loss, with the plane of scenarios that lose 4 units and the most likely one (star). Its Mahalanobis distance is \GalNineDCalm{}, or \GalNineDStress{} under stressed correlations. (b) 300 one-year paths of a ten-factor portfolio that switches between calm and stress regimes, coloured by the share of days in stress.
+\end{frame}
+
+\begin{frame}{Reverse stress testing a linear portfolio}
+  \small
+  Risk factor changes $x \sim \mathcal N(0, \Sigma)$, portfolio P\&L $w^\top x$, loss $\ell = -w^\top x$. Among all scenarios with loss $\ell$, the most likely one (largest density, smallest Mahalanobis distance $\sqrt{x^\top\Sigma^{-1}x}$) solves
+  \[ \min_x\; x^\top\Sigma^{-1}x \quad\text{s.t.}\quad -w^\top x = \ell \qquad\Longrightarrow\qquad x^* = -\ell\,\frac{\Sigma w}{w^\top\Sigma w}, \qquad d = \frac{\ell}{\sqrt{w^\top\Sigma w}}, \]
+  and $P(\text{loss} \ge \ell) = 1 - \Phi(d)$. For Gaussian $x$, $x^*$ is also $\E[x \mid -w^\top x = \ell]$.
+  \vspace{0.3em}
+  \begin{itemize}
+    \item The scenario moves every factor in proportion to its covariance with the portfolio: correlated factors share the blame.
+    \item The same loss is more plausible when correlations rise, because $w^\top\Sigma w$ grows.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{The scenario and its plausibility}
+  \centering
+  \includegraphics[width=0.86\textwidth]{fig18_reverse_stress.png}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \footnotesize
+      (a) Equity, rate and spread moves in standard deviations; portfolio long equity, gains when rates rise, loses when spreads widen. For a loss of 4 units: equity $\EEighteenEqFour$, rate $\EEighteenRateFour$, spread $\EEighteenSpreadFour$. Monte Carlo conditional means agree within $\EEighteenMcErr$.
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \footnotesize
+      (b) P\&L standard deviation $\EEighteenSdCalm$ with calm correlations, $\EEighteenSdStress$ with stressed ones (1.6 times larger in magnitude). A loss of 6 has probability $\EEighteenPCalm$ in calm conditions and $\EEighteenPStress$ in stress: $\EEighteenRatio$ times more likely, from an 11\% rise in P\&L volatility.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Regimes and the FRTB stress calibration}
+  \small
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \textbf{Regime switching.} A two-state Markov chain (calm, stress) with daily switching probabilities; given the state, returns are Gaussian with that state's volatilities and correlations. Rolling-window risk measures see the stress only after it has arrived, and remember it after it has gone.
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \textbf{FRTB indirect calibration} \citep{bcbs2023mar33}. The full-set ES in a stress period is approximated from a reduced set of risk factors with long history:
+      \[ \ES_{F,S} \approx \ES_{R,S}\,\frac{\ES_{F,C}}{\ES_{R,C}}, \]
+      $C$ current, $S$ stress. The reduced set must explain at least 75\% of the full current ES. The ratio is assumed the same in calm and stress.
+    \end{column}
+  \end{columns}
+  \vspace{0.3em}
+  When correlations rise in stress, the factors left out of the reduced set contribute more in stress than in calm, so the ratio taken from calm data is too small. The 75\% rule limits how much is left out.
+\end{frame}
+
+\begin{frame}{What simulation shows}
+  \centering
+  \includegraphics[width=0.86\textwidth]{fig19_regimes.png}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \footnotesize
+      (a) Ten factors; calm volatility 1\% and correlation 0.2; stress volatility 2.5\% and correlation 0.6; stress $\ENineteenShareStress\%$ of the time. Rolling 250-day ES lags each stress episode and decays slowly after it.
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \footnotesize
+      (b) Indirect over true stressed ES, 500 repetitions. If correlations stay at 0.2, even one factor is enough ($\ENineteenRatioOneSame$). If they rise to 0.6, one factor (coverage $\ENineteenCoverOne\%$) gives $\ENineteenRatioOne$, while the first reduced set that meets the 75\% rule ($k = \ENineteenKSeventyFive$ of 10 factors) gives $\ENineteenRatioSeventyFive$: the rule does its job here.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Generative scenario models}
+  \small
+  Historical and hypothetical scenarios are few. Generative models try to produce many realistic ones, including tails.
+  \begin{itemize}
+    \item \textbf{Tail-GAN} \citep{cont2022tailgan} trains a generative adversarial network with a loss built on the joint elicitability of VaR and ES, so that generated multi-asset scenarios reproduce the tail risk of trading strategies.
+    \item \textbf{Diffusion factor models} \citep{chen2025diffusion} build a latent factor structure into a diffusion model of high-dimensional returns; the authors report error bounds that depend on the number of factors rather than the number of assets.
+  \end{itemize}
+  \vspace{0.3em}
+  \begin{alertblock}{The validation question}
+    A generator that matches marginal statistics can still misstate joint tails. Its scenarios need the same outcomes analysis as any risk model: backtests of the risk measures it implies (deck 2), and checks of the tail dependence it produces (deck 4).
+  \end{alertblock}
+\end{frame}
+
+\begin{frame}{Discussion and takeaways}
+  \small
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \textbf{What the experiments show}
+      \begin{itemize}
+        \item Reverse stress tests have closed forms for linear Gaussian portfolios and should be checked against them before nonlinear versions are trusted.
+        \item Plausibility of a stress loss depends strongly on the correlation assumption.
+        \item The FRTB indirect calibration is accurate when correlations are stable. When they rise in stress it is biased low, by a lot at low coverage; at 75\% coverage the bias was small in this setting.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \textbf{For a stress testing team}
+      \begin{enumerate}
+        \item Report the Mahalanobis distance (plausibility) of every scenario, under both calm and stressed correlations.
+        \item Test the reduced factor set's ratio in historical stress windows, not only in the current window.
+        \item Validate generated scenarios by their implied risk measures and tail dependence.
+      \end{enumerate}
+      \textbf{Open question.} Reverse stress tests for nonlinear, multi-period portfolios with feedback.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Reproduce}
+  \small
+  Code: \texttt{stress.py}. Experiments: \texttt{e18\_reverse\_stress.py}, \texttt{e19\_regimes.py}.
+\begin{verbatim}
+from stochastic_risk import stress as st
+x_star, d, prob = st.reverse_stress_point(w, Sigma, loss=4.0)
+r, state = st.simulate_regimes(5000, 0.004, 0.02, cov_calm, cov_stress)
+st.indirect_stress_es(r_current, r_stress, w, reduced=[0, 1, 2])
+\end{verbatim}
+\end{frame}
+
+\deckreferences
+\end{document}

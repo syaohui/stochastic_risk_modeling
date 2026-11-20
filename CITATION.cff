@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: "If you use these slides or this code, please cite them as below."
+title: "stochastic-risk: Stochastic Simulation for Risk Modeling and Model Validation"
+type: software
+authors:
+  - family-names: Shu
+    given-names: Yaohui
+    affiliation: Stony Brook University
+version: 0.1.0
+date-released: 2026-11-20
+license: MIT
+repository-code: "https://github.com/syaohui/stochastic_risk_modeling"
+keywords:
+  - risk management
+  - model validation
+  - model risk
+  - value-at-risk
+  - expected shortfall
+  - backtesting
+  - credit risk
+  - counterparty credit risk
+  - Monte Carlo simulation
+  - stress testing

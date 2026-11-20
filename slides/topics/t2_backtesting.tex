@@ -1,0 +1,207 @@
+\documentclass[aspectratio=169,10pt]{beamer}
+\newcommand{\reporoot}{../..}
+\input{../preamble}
+
+\title{Backtesting VaR and Expected Shortfall}
+\subtitle{Exception counts, independence, ES tests and the FRTB P\&L attribution test}
+\decknumber{2}
+
+\begin{document}
+
+\maketitle
+
+\begin{frame}{The question}
+  \small
+  \begin{columns}[T]
+    \begin{column}{0.55\textwidth}
+      A risk model forecasts a tail every day. A year later we have 250 outcomes. \hl{Can we tell a good model from a bad one, and how often do we get it wrong?}
+      \begin{itemize}
+        \item Regulators turn backtest outcomes into capital: more exceptions, a higher multiplier.
+        \item Validation teams need tests with known size (false alarms) and known power (missed problems).
+      \end{itemize}
+      Simulation gives both, because we control the truth.
+    \end{column}
+    \begin{column}{0.42\textwidth}
+      \begin{alertblock}{In this deck}
+        \small
+        \begin{enumerate}
+          \item Exception tests and the Basel traffic light.
+          \item What 250 days can detect.
+          \item Backtesting ES.
+          \item The FRTB P\&L attribution test.
+        \end{enumerate}
+      \end{alertblock}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Backtesting as a random experiment}
+  \centering
+  \includegraphics[width=0.95\textwidth,height=0.54\textheight,keepaspectratio]{gallery/g02_backtesting.png}\par\vspace{0.4em}
+  \footnotesize\raggedright
+  (a) Exception counts in 250 days for a correct 99\% VaR (true exception rate $p = 1\%$) and for a model with $p = 2\%$, over the Basel zones. (b) Rejection probability of the exact one-sided binomial test of $p = 1\%$ at 5\% size, against the true rate $p$ and the backtest length $n$ (days). Against $p = 2\%$ it rejects \GalTwoPowTwoFifty\% of the time at 250 days; 80\% power (red) takes about \GalTwoNEighty{} days.
+\end{frame}
+
+\begin{frame}{Exception-based tests}
+  \small
+  Hit $I_t = \mathbf{1}\{L_t > \VaR_{t}\}$. Under a correct VaR at level $\alpha$, the $I_t$ are i.i.d.\ Bernoulli($p$), $p = 1 - \alpha$. With $x$ exceptions in $n$ days:
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \textbf{Proportion of failures} \citep{kupiec1995techniques}:
+      \[ LR_{pof} = -2\ln\frac{(1-p)^{n-x}p^x}{(1-\hat p)^{n-x}\hat p^{\,x}} \sim \chi^2_1,\quad \hat p = x/n. \]
+      \textbf{Independence} \citep{christoffersen1998evaluating}: a two-state Markov chain with $\pi_{ij} = P(I_t = j \mid I_{t-1} = i)$ against $\pi_{01} = \pi_{11}$; $LR_{ind} \sim \chi^2_1$, and conditional coverage $LR_{cc} = LR_{pof} + LR_{ind} \sim \chi^2_2$.
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \textbf{Basel traffic light} \citep{bcbs2023mar32}, 99\% VaR, 250 days, multiplier added to $m_c$:
+      \vspace{0.2em}
+
+      \footnotesize
+      \begin{tabular}{lll}
+        \toprule
+        Zone & Exceptions & Multiplier \\
+        \midrule
+        Green & 0 to 4 & 1.50 \\
+        Amber & 5 to 9 & 1.70 to 1.92 \\
+        Red & 10 or more & 2.00 \\
+        \bottomrule
+      \end{tabular}
+      \vspace{0.3em}
+
+      \small Exceptions count the larger of actual-P\&L and hypothetical-P\&L exceptions. A desk with more than 12 exceptions at 99\% or 30 at 97.5\% in a year moves to the standardised approach (MAR32.19).
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{What 250 days can detect}
+  \centering
+  \includegraphics[width=0.82\textwidth]{fig03_var_backtests.png}
+  \footnotesize
+  \begin{columns}[T]
+    \begin{column}{0.32\textwidth}
+      (a) Exact binomial. A correct model lands green $\EThreeGreenOne\%$, amber $\EThreeAmberOne\%$, red $\EThreeRedOne\%$ of the time. A model whose true rate is 2\% is still green $\EThreeGreenTwo\%$ of the time.
+    \end{column}
+    \begin{column}{0.32\textwidth}
+      (b) Correct model, $\chi^2$ critical values, 99\% VaR. At 250 days Kupiec rejects $\EThreeSizeKupShort\%$ and independence $\EThreeSizeIndShort\%$ instead of 5\%; at 10,000 days independence still rejects only $\EThreeSizeIndLong\%$. Use exact or simulated critical values.
+    \end{column}
+    \begin{column}{0.32\textwidth}
+      (c) GARCH-t returns, VaR at the true unconditional quantile: right rate ($\EThreeRate\%$), clustered hits. Clustering makes the count overdispersed, so Kupiec rejects $\EThreePowKupShort\%$ at 250 days. Independence rejects $\EThreePowIndShort\%$, rising to $\EThreePowIndLong\%$ with 10,000 days.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Backtesting expected shortfall}
+  \small
+  ES is not elicitable alone \citep{gneiting2011making}, but (VaR, ES) is jointly elicitable \citep{fissler2016higher}, and ES tests use both forecasts.
+  \vspace{0.3em}
+  \begin{columns}[T]
+    \begin{column}{0.52\textwidth}
+      \textbf{Acerbi and Sz\'ekely (2014), test 2.} With returns $X_t$ (gains positive), forecasts $\VaR_t$, $\ES_t$ at tail probability $p$, and $I_t = \mathbf{1}\{X_t + \VaR_t < 0\}$:
+      \[ Z_2 = \sum_{t=1}^{T}\frac{X_t I_t}{T\,p\,\ES_t} + 1, \qquad \E_{H_0}[Z_2] = 0, \]
+      negative when risk is underestimated. It weighs each exception by its size relative to the forecast ES \citep{acerbi2014backtesting}.
+    \end{column}
+    \begin{column}{0.45\textwidth}
+      The authors report that critical values are stable across Student $t$ models: about $-0.7$ at 5\% and $-1.8$ at 0.01\% for $T = 250$, so fixed thresholds can serve as a traffic light.
+      \vspace{0.3em}
+
+      Regression-based ES backtests that need only the ES forecast are an alternative \citep{bayer2022regression}.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{ES test against exception counting}
+  \centering
+  \includegraphics[width=0.88\textwidth]{fig04_es_backtest.png}
+  \footnotesize
+  \begin{columns}[T]
+    \begin{column}{0.32\textwidth}
+      (a) Model and truth Student $t_5$, $T = 250$, 200,000 simulated years. The 5\% critical value $\EFourCritFive$ matches the published $-0.7$. The 0.01\% value, $\EFourCritTiny$ against the published $-1.8$, rests on about 20 simulated years and is imprecise.
+    \end{column}
+    \begin{column}{0.32\textwidth}
+      (b) True scale 1.2 times the model's: $Z_2$ rejects $\EFourPowZTwoK\%$ of the time, the 99\% VaR count test ($x \ge \EFourXc$, size $\EFourSizeVaR\%$) $\EFourPowVaRK\%$.
+    \end{column}
+    \begin{column}{0.32\textwidth}
+      (c) Same variance, heavier tail ($\nu = 3$): $\EFourPowZTwoNu\%$ against $\EFourPowVaRNu\%$. Both tests struggle with tail shape at 250 days.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{The FRTB P\&L attribution test}
+  \small
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      Each trading desk compares, over 250 days, the hypothetical P\&L (HPL) from front-office pricing with the risk-theoretical P\&L (RTPL) from the risk model (MAR32.20 to MAR32.42):
+      \begin{itemize}
+        \item Spearman rank correlation of HPL and RTPL;
+        \item Kolmogorov-Smirnov (KS) distance between their empirical distributions.
+      \end{itemize}
+      Green if correlation $> 0.80$ and KS $< 0.09$; red if correlation $< 0.70$ or KS $> 0.12$; amber otherwise (capital surcharge). Red desks use the standardised approach.
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \textbf{Three ways RTPL can differ} (Student $t_4$ factor P\&Ls, 4,000 simulated years per point):
+      \begin{itemize}
+        \item a missing risk factor with share $f$ of HPL variance;
+        \item a scale error, RTPL $= s \times$ HPL;
+        \item valuation noise with variance share $g$.
+      \end{itemize}
+      A pure scale error leaves the rank correlation at one (lowest mean $\EFiveRhoScale$), so only KS can catch it.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{PLA zones in simulation}
+  \centering
+  \includegraphics[width=0.94\textwidth]{fig05_pla.png}
+  \footnotesize
+  \begin{columns}[T]
+    \begin{column}{0.32\textwidth}
+      (a) A perfect model is green $\EFiveGreenZero\%$ of the time. Green falls below 50\% once $\EFiveHalfGreenF\%$ of variance is missing.
+    \end{column}
+    \begin{column}{0.32\textwidth}
+      (b) Green falls below 50\% only for $s \ge \EFiveHalfGreenSUp$ or $s \le \EFiveHalfGreenSLo$: with 250 days, the KS threshold tolerates scale errors of 20\% or more before flagging them.
+    \end{column}
+    \begin{column}{0.32\textwidth}
+      (c) Noise: green below 50\% at $g = \EFiveHalfGreenG\%$ of HPL variance.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Discussion and takeaways}
+  \small
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \textbf{What the simulations show}
+      \begin{itemize}
+        \item 250 days of 99\% exceptions cannot separate a 1\% model from a 2\% model reliably.
+        \item $\chi^2$ approximations are poor at Basel sample sizes: Kupiec over-rejects and the independence test under-rejects.
+        \item Clustered exceptions are nearly invisible to the independence test at 250 days; they show up instead as overdispersed counts.
+        \item The ES test adds power against volatility errors; tail shape stays hard to test with one year.
+        \item In the PLA test only KS catches scale errors, and only large ones.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \textbf{For a validation team}
+      \begin{enumerate}
+        \item Report size and power of every test at your sample length, by simulation.
+        \item Test independence and ES, not only counts.
+        \item Diagnose PLA failures by metric: low correlation points to missing factors, high KS to scale or distribution errors.
+      \end{enumerate}
+      \textbf{Assumptions.} One-day horizon, i.i.d.\ or GARCH truth, no overlap between forecasts.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Reproduce}
+  \small
+  Code: \texttt{backtest.py}. Experiments: \texttt{e03\_var\_backtests.py}, \texttt{e04\_es\_backtest.py}, \texttt{e05\_pla.py}.
+\begin{verbatim}
+from stochastic_risk import backtest as bt
+bt.traffic_light(6)                     # ('amber', 1.76)
+bt.kupiec_pof(x=6, n=250, p=0.01)       # (LR, p-value)
+bt.christoffersen(hits, p=0.01)         # independence and conditional coverage
+bt.acerbi_szekely_z2(returns, var, es, alpha=0.975)
+bt.pla_metrics(hpl, rtpl)               # (Spearman, KS, zone)
+\end{verbatim}
+\end{frame}
+
+\deckreferences
+\end{document}

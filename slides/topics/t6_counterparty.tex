@@ -1,0 +1,167 @@
+\documentclass[aspectratio=169,10pt]{beamer}
+\newcommand{\reporoot}{../..}
+\input{../preamble}
+
+\title{Counterparty Credit Risk and CVA}
+\subtitle{Exposure simulation, an exact check, and wrong-way risk}
+\decknumber{6}
+
+\begin{document}
+
+\maketitle
+
+\begin{frame}{The question}
+  \small
+  \begin{columns}[T]
+    \begin{column}{0.55\textwidth}
+      A derivative is an asset when it is in the money, and the counterparty may default before paying. \hl{How much could we lose, and when, and what is that worth today?}
+      \begin{itemize}
+        \item Exposure is a random path, not a number: it needs simulation of the market over the life of the trade.
+        \item Regulatory capital uses exposure profiles; CVA prices the expected loss.
+        \item When default and exposure move together (wrong-way risk), independence assumptions understate both.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.42\textwidth}
+      \begin{alertblock}{In this deck}
+        \small
+        \begin{enumerate}
+          \item Exposure metrics and the Basel alpha.
+          \item Hull-White simulation of a swap.
+          \item An exact check by swaptions.
+          \item CVA with wrong-way risk.
+        \end{enumerate}
+      \end{alertblock}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Exposure is a distribution that moves in time}
+  \centering
+  \includegraphics[width=0.95\textwidth,height=0.54\textheight,keepaspectratio]{gallery/g06_counterparty.png}\par\vspace{0.4em}
+  \footnotesize\raggedright
+  (a) 120 Hull-White paths of the value $V(t)$ of a five-year payer swap (coloured by the value at year 2), with expected exposure and the 97.5\% PFE from 20,000 paths. (b) The distribution of $V(t)$ every quarter; orange is the exposure $V^+ = \max(V, 0)$. It widens with time and narrows at each payment date.
+\end{frame}
+
+\begin{frame}{Exposure metrics}
+  \small
+  With $V(t)$ the netting set's value to us (currency), exposure is $V(t)^+ = \max(V(t), 0)$.
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \begin{itemize}
+        \item Expected exposure $EE(t) = \E[V(t)^+]$.
+        \item Potential future exposure $PFE_q(t)$: the $q$-quantile of $V(t)^+$ (here $q = 97.5\%$).
+        \item Expected positive exposure (EPE): time average of $EE$ over the first year.
+        \item Effective EE: $\max_{s \le t} EE(s)$; effective EPE (EEPE) is its first-year average.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      Under the internal model method, exposure at default is $\alpha \cdot EEPE$ with $\alpha = 1.4$; the standardised approach SA-CCR uses $EAD = 1.4\,(RC + PFE)$ with the same $\alpha$.
+      \vspace{0.3em}
+
+      Effective EE does not fall when trades roll off within the year, a conservative choice for short-dated portfolios.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Simulating a swap under Hull-White}
+  \small
+  Short rate $r(t) = x(t) + \phi(t)$, $\dd x = -a\,x\,\dd t + \sigma\,\dd W$, mean reversion $a$ (1/year), volatility $\sigma$, fitted to a flat curve $P^M(0,t) = e^{-r_0 t}$. Zero-coupon bonds \citep{brigo2006interest}:
+  \[ P(t,T) = \frac{P^M(0,T)}{P^M(0,t)}\exp\Big\{\tfrac12\big[\Gamma(t,T) - \Gamma(0,T) + \Gamma(0,t)\big] - B(t,T)\,x(t)\Big\}, \]
+  \[ B = \frac{1 - e^{-a\tau}}{a}, \quad \Gamma = \frac{\sigma^2}{a^2}\Big[\tau + \tfrac{2}{a}e^{-a\tau} - \tfrac{1}{2a}e^{-2a\tau} - \tfrac{3}{2a}\Big], \quad \tau = T - t, \]
+  with $\Gamma(t,T)$ the variance of $\int_t^T x(u)\,\dd u$ given $x(t)$ (dimensionless).
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      $x$ and $\int_0^t x$ are jointly Gaussian and simulated exactly, so $\E[D(0,t)] = P^M(0,t)$ with $D$ the bank-account discount factor (tested to $2\times10^{-4}$).
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      Payer swap (pay fixed $K$, unit notional, dates $T_k$ one year apart, accrual $\delta = 1$ year, $L_k$ the rate fixed at $T_{k-1}$) inside $(T_{k-1}, T_k]$:
+      \begin{align*}
+        V(t) &= P(t,T_k)(1 + \delta L_k) - P(t,T_n)\\
+             &\quad - K\delta\textstyle\sum_{i \ge k}P(t,T_i).
+      \end{align*}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Exposure profiles, and an exact check}
+  \centering
+  \includegraphics[width=0.86\textwidth]{fig12_exposure.png}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \footnotesize
+      (a) Five-year swap at par ($K = \ETwelveK\%$), $a = 0.05$, $\sigma = 1\%$, flat 3\% curve, $\ETwelvePaths$ paths. Payer EE peaks at $\ETwelvePeakEE\%$ of notional near year $\ETwelveTPeak$; PFE$_{97.5}$ peaks at $\ETwelvePeakPFE\%$. EPE $\ETwelveEPE\%$, EEPE $\ETwelveEEPE\%$, EAD $= 1.4 \times$ EEPE $= \ETwelveEAD\%$.
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \footnotesize
+      (b) At a reset date the discounted expected exposure is a payer swaption price, known in closed form through Jamshidian's decomposition into zero-coupon bond puts \citep{brigo2006interest}. Simulation and formula agree within $\ETwelveMaxZ$ standard errors.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{CVA and wrong-way risk}
+  \small
+  \textbf{Independent default.} With loss given default $LGD$ and survival $S(t) = e^{-\lambda t}$ at hazard $\lambda$ (1/year):
+  \[ \mathrm{CVA} = LGD\sum_i \E\big[D(0,t_i)\,V(t_i)^+\big]\big(S(t_{i-1}) - S(t_i)\big). \]
+  \textbf{Wrong-way risk} \citep{hull2012cva}: make the hazard depend on the exposure on each path,
+  \[ \lambda_i = \exp\big(a_i + b\,V(t_i)/1\%\big), \]
+  with $a_i$ calibrated so that expected survival still matches the credit curve, and $b$ (per 1\% of notional) the dependence. $b > 0$: the counterparty is more likely to default when it owes us more. The CVA becomes $LGD\sum_i \E[D(0,t_i)V(t_i)^+(S_{i-1} - S_i)]$ with path-wise survival $S_i$.
+  \vspace{0.2em}
+
+  \footnotesize With $b = 0$ it reduces to the independent CVA (tested to 1\%).
+\end{frame}
+
+\begin{frame}{How much wrong-way risk adds}
+  \centering
+  \includegraphics[width=0.86\textwidth]{fig13_cva_wwr.png}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \footnotesize
+      (a) Hazard 2\% a year, LGD 60\%, 40,000 paths. Independent CVA: payer $\EThirteenCvaPay$ bp, receiver $\EThirteenCvaRec$ bp of notional. At $b = 0.3$ the payer CVA is $\EThirteenWwrPay$ times its independent value; at $b = -0.3$ (right-way) $\EThirteenRwrPay$ times.
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \footnotesize
+      (b) Contributions by default-time bucket: wrong-way risk moves CVA toward the dates where exposure is high on the paths where default happens.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Discussion and takeaways}
+  \small
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \textbf{What the experiments show}
+      \begin{itemize}
+        \item Exposure simulation can and should be validated against closed-form prices at reset dates.
+        \item EE and PFE differ by a factor of several: capital and limits answer different questions.
+        \item Modest exposure-default dependence changes CVA materially; the sign depends on which side of the trade we hold.
+      \end{itemize}
+      \textbf{Assumptions.} One-factor rates, one uncollateralized swap, no netting or margin, hazard driven by exposure only.
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \textbf{For a CCR modeler}
+      \begin{enumerate}
+        \item Benchmark simulated exposures against analytic prices before trusting tails.
+        \item Report CVA sensitivity to a wrong-way parameter, not one number.
+        \item Model margin periods of risk explicitly for collateralized sets.
+      \end{enumerate}
+      \textbf{Open questions.} Calibrating wrong-way dependence from data that rarely contain defaults; joint simulation of market and credit at portfolio scale.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Reproduce}
+  \small
+  Code: \texttt{ccr.py}. Experiments: \texttt{e12\_exposure.py}, \texttt{e13\_cva\_wwr.py}.
+\begin{verbatim}
+from stochastic_risk import ccr
+hw = ccr.HullWhite(a=0.05, sigma=0.01, r0=0.03)
+x, D = hw.simulate(times, n_paths=50000)
+V = ccr.swap_values(hw, times, x, pay_times, 1.0, ccr.par_rate(hw, pay_times, 1.0))
+ccr.exposure_metrics(times, V)             # EE, PFE, EPE, EEPE, EAD
+ccr.payer_swaption(hw, 2.0, pay_times, 1.0, K)
+ccr.cva_wrong_way(times, D, V, lgd=0.6, lam=0.02, b=0.3)
+\end{verbatim}
+\end{frame}
+
+\deckreferences
+\end{document}

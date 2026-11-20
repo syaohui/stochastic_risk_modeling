@@ -1,0 +1,101 @@
+\section{Validation}
+
+\begin{frame}{Model risk management in 2026: SR 26-2}
+  \small
+  On 17 April 2026 the Federal Reserve, OCC and FDIC issued revised guidance on model risk management, \hl{superseding SR 11-7} and SR 21-8 \citep{fed2026sr262}.
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \begin{itemize}
+        \item Risk-based and tailored; most relevant above \$30 billion in total assets.
+        \item Narrower model definition: a ``complex quantitative method, system, or approach''; simple arithmetic and deterministic rules are out.
+        \item Generative and agentic AI are outside the scope; other AI models are in.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \begin{itemize}
+        \item Materiality from model exposure and purpose.
+        \item Validation: conceptual soundness, outcomes analysis (including back-testing), ongoing monitoring.
+        \item Effective challenge by objective experts with standing to effect change.
+      \end{itemize}
+    \end{column}
+  \end{columns}
+  \vspace{0.3em}
+  The rest of this section quantifies outcomes analysis: how much a backtest can see, and how much error the estimate itself carries. Deep dives 2 and 3.
+\end{frame}
+
+\begin{frame}{Backtesting as a random experiment}
+  \centering
+  \includegraphics[width=0.95\textwidth,height=0.54\textheight,keepaspectratio]{gallery/g02_backtesting.png}\par\vspace{0.4em}
+  \footnotesize\raggedright
+  (a) Exception counts in 250 days for a correct 99\% VaR (true exception rate $p = 1\%$) and for a model with $p = 2\%$, over the Basel zones. (b) Rejection probability of the exact one-sided binomial test of $p = 1\%$ at 5\% size, against the true rate $p$ and the backtest length $n$ (days). Against $p = 2\%$ it rejects \GalTwoPowTwoFifty\% of the time at 250 days; 80\% power (red) takes about \GalTwoNEighty{} days.
+\end{frame}
+
+\begin{frame}{Backtesting VaR: what 250 days can see}
+  \centering
+  \includegraphics[width=0.9\textwidth]{fig03_var_backtests.png}
+  \footnotesize
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      Basel traffic light \citep{bcbs2023mar32}: green 0 to 4 exceptions (multiplier 1.50), amber 5 to 9 (1.70 to 1.92), red 10 or more (2.00). (a) A correct 99\% model is amber $\EThreeAmberOne\%$ of the time; a model with true rate 2\% is still green $\EThreeGreenTwo\%$.
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      (b) With $\chi^2$ critical values, the independence test \citep{christoffersen1998evaluating} rejects a correct model $\EThreeSizeIndShort\%$ of the time at 250 days, not 5\%. (c) Clustered exceptions with the right rate: counts become overdispersed and Kupiec rejects $\EThreePowKupShort\%$; independence only $\EThreePowIndShort\%$.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Backtesting expected shortfall}
+  \centering
+  \includegraphics[width=0.9\textwidth]{fig04_es_backtest.png}
+  \footnotesize
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      Acerbi-Sz\'ekely test $Z_2 = \sum_t X_tI_t/(Tp\,\ES_t) + 1$, with returns $X_t$, exception indicators $I_t$ and tail probability $p$ \citep{acerbi2014backtesting}. (a) Simulated 5\% critical value $\EFourCritFive$ (published: $-0.7$).
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      (b) Volatility 20\% too low: $Z_2$ rejects $\EFourPowZTwoK\%$ of the time, the 99\% VaR exception count $\EFourPowVaRK\%$. (c) A heavier tail with the same variance is almost undetectable in 250 days by either test.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{The FRTB P\&L attribution test}
+  \centering
+  \includegraphics[width=0.9\textwidth]{fig05_pla.png}
+  \footnotesize
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      Hypothetical P\&L against the risk model's P\&L over 250 days: green if Spearman $> 0.80$ and KS $< 0.09$; red if Spearman $< 0.70$ or KS $> 0.12$ (MAR32.42). (a) Green falls below 50\% once $\EFiveHalfGreenF\%$ of the variance is missing.
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      (b) A pure scale error keeps the rank correlation at one; only KS catches it, and green drops below 50\% only at a ratio of $\EFiveHalfGreenSUp$ or $\EFiveHalfGreenSLo$. (c) Valuation noise: at $\EFiveHalfGreenG\%$ of the variance.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Estimation risk}
+  \centering
+  \includegraphics[width=0.82\textwidth]{fig06_estimation_risk.png}
+  \footnotesize
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      (a) A correctly specified normal model fitted to 250 days has its 99\% VaR exceeded $\ESixPlugTwoFifty\%$ of the time, because $(L_{n+1} - \bar L)/(s\sqrt{1+1/n}) \sim t_{n-1}$ for sample mean $\bar L$ and standard deviation $s$. Historical simulation with the third-largest of 250 losses: $\ESixHsTwoFifty\%$, for any continuous distribution.
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      (b) The empirical ES$_{97.5}$ from 250 days has a relative error of $\ESixSdNorm\%$ (normal) and $\ESixSdT\%$ ($t_3$). Percentile bootstrap intervals cover the truth $\ESixCoverNorm\%$ and $\ESixCoverT\%$ of the time, not 95\%.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Model uncertainty}
+  \centering
+  \includegraphics[width=0.9\textwidth]{fig07_model_uncertainty.png}
+  \footnotesize
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      Relative-entropy worst case \citep{glasserman2014robust}: the model within divergence $\eta$ that maximizes expected loss. (a) Exact for normal losses: ES $\times\ESevenWcNormTenth$ at $\eta = 0.1$. (b) Undefined for heavy tails: sample answers drift with the number of scenarios.
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      (c) Five standard estimators applied to the same 500-day window disagree by a factor $\ESevenSpreadMed$ (median) and by more than 1.5 in $\ESevenSpreadOver\%$ of windows. Challenger dispersion is a direct, model-free measure of model risk.
+    \end{column}
+  \end{columns}
+\end{frame}

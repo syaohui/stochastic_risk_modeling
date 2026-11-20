@@ -1,0 +1,80 @@
+\section{Credit risk}
+
+\begin{frame}{The one-factor model behind Basel capital}
+  \small
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      Obligor $i$ defaults when $\sqrt\rho\,Y + \sqrt{1-\rho}\,\varepsilon_i > \Phi^{-1}(1-p_i)$, with systematic factor $Y$, idiosyncratic $\varepsilon_i$, default probability $p_i$ and asset correlation $\rho$. Given $Y = y$,
+      \[ p_i(y) = \Phi\big((\Phi^{-1}(p_i) + \sqrt\rho\,y)/\sqrt{1-\rho}\big). \]
+      Infinitely granular portfolio: $\VaR_q = p(\Phi^{-1}(q))$. Portfolio-invariant capital needs one factor and no concentrations \citep{gordy2003risk}.
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \textbf{IRB} \citep{bcbs2005irb}:
+      \[ K = LGD\,\big[p_R(\Phi^{-1}(0.999)) - PD\big]\times\text{MF}, \]
+      with loss given default $LGD$, $p_R$ the conditional PD at the regulatory correlation $R$ (0.12 to 0.24) and MF the maturity factor. PD 1\%, LGD 45\%, $M = 2.5$: $K = \EEightKOne\%$ of EAD.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Capital, granularity and an exact check}
+  \centering
+  \includegraphics[width=0.9\textwidth]{fig08_asrf.png}
+  \footnotesize
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      (a) IRB capital against PD for three maturities. (b) 99.9\% default rate of $N$ equal names (PD 1\%, $\rho = 0.12$): with $N = \EEightNHundred$ the exact value is $\EEightExactHundred\%$ against $\EEightAsrf\%$ for an infinite portfolio.
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      A second-order granularity correction derived here gives $\EEightGAHundred\%$. (c) Simulated default counts match the exact binomial mixture to $\EEightMcMax$. Deep dive 4.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Default clustering: the tail and the copula}
+  \centering
+  \includegraphics[width=0.95\textwidth,height=0.54\textheight,keepaspectratio]{gallery/g04_credit_portfolio.png}\par\vspace{0.4em}
+  \footnotesize\raggedright
+  (a) Probability that the default rate of an infinitely granular portfolio with PD 1\% exceeds $x$, against asset correlation $\rho$; red marks the 99.9\% quantile, the Basel capital point. (b, c) 20,000 simulated pairs of obligors (PD 5\%, correlation 0.3) on the uniform scale $U$, lower corner: the same correlation gives \GalFourJointGauss{} joint defaults with a Gaussian copula and \GalFourJointT{} with a Student $t_4$ copula.
+\end{frame}
+
+\begin{frame}{Tail dependence and rare-event simulation}
+  \centering
+  \includegraphics[width=0.82\textwidth]{fig09_copula_is.png}
+  \footnotesize
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      (a) Same PDs and correlation, different copula: the 99.9\% loss is $\ENineRatioTFour$ times larger with a $t_4$ copula than with a Gaussian one.
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      (b) Importance sampling \citep{glasserman2005importance} at $P(L > x) = 10^{-4}$: relative error $\ENineIsRelHigh\%$ against $\ENineMcRelHigh\%$ for plain Monte Carlo with the same $\ENineNis$ scenarios.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Validating PD models: calibration under correlated defaults}
+  \centering
+  \includegraphics[width=0.82\textwidth]{fig10_calibration_tests.png}
+  \footnotesize
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      Binomial and Jeffreys tests (the ECB's choice \citep{ecb2019validation}) assume independent defaults. (a) With asset correlation 0.12 they reject a correct 1\% PD $\ETenSizeBin\%$ and $\ETenSizeJef\%$ of the time at the 5\% level; a correlation-adjusted test rejects $\ETenSizeAdj\%$.
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      (b) The price of honest size: when the true PD is twice the assigned one, the adjusted test rejects only $\ETenPowAdj\%$ of the time with one year of data.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Validating PD models: discrimination and stability}
+  \centering
+  \includegraphics[width=0.82\textwidth]{fig11_discrimination.png}
+  \footnotesize
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      (a) DeLong 95\% intervals for the AUC \citep{delong1988comparing} cover $\EElevenCoverTen\%$ of the time with 10 defaults and $\EElevenCoverHundred\%$ with 100.
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      (b) With no population shift at all, the population stability index exceeds the common 0.10 alarm level $\EElevenFaHundred\%$ of the time in a sample of 100. Deep dive 5.
+    \end{column}
+  \end{columns}
+\end{frame}

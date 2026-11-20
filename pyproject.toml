@@ -1,0 +1,52 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "stochastic-risk"
+version = "0.1.0"
+description = "Stochastic simulation for risk modeling and model validation: market, credit, counterparty and operational risk, with slide decks and verified code"
+readme = "README.md"
+license = { file = "LICENSE" }
+authors = [{ name = "Yaohui Shu" }]
+requires-python = ">=3.10"
+dependencies = [
+    "numpy>=1.24",
+    "scipy>=1.10",
+    "matplotlib>=3.7",
+]
+keywords = [
+    "risk management",
+    "model validation",
+    "model risk",
+    "value-at-risk",
+    "expected shortfall",
+    "backtesting",
+    "FRTB",
+    "credit risk",
+    "counterparty risk",
+    "CVA",
+    "Monte Carlo",
+    "stress testing",
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Topic :: Office/Business :: Financial",
+]
+
+[project.urls]
+Repository = "https://github.com/syaohui/stochastic_risk_modeling"
+
+[project.optional-dependencies]
+test = ["pytest>=7"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+stochastic_risk = ["journal.mplstyle"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

@@ -1,0 +1,48 @@
+\section{Market risk}
+
+\begin{frame}{The moving target: one simulated year of market risk}
+  \centering
+  \includegraphics[width=0.95\textwidth,height=0.54\textheight,keepaspectratio]{gallery/g01_market_risk.png}\par\vspace{0.4em}
+  \footnotesize\raggedright
+  (a) One simulated year of GARCH-t daily returns $r_t$ (Student $t_5$ innovations, unconditional volatility 1.2\% a day) inside the true conditional 99\% VaR band: \GalOneExceptions{} exceptions, while volatility varies by a factor of \GalOneVolRatio. (b) The true one-day loss density on every tenth day, on a log scale; red marks losses beyond that day's 99\% VaR.
+\end{frame}
+
+\begin{frame}{VaR, ES and the FRTB rules}
+  \small
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \[ \VaR_\alpha(L) = \inf\{x : P(L \le x) \ge \alpha\}, \]
+      \[ \ES_\alpha(L) = \tfrac{1}{1-\alpha}\textstyle\int_\alpha^1 \VaR_u(L)\,\dd u, \]
+      with $L$ the loss (currency) and $\alpha$ the confidence level.
+      \begin{itemize}
+        \item ES is coherent \citep{artzner1999coherent,acerbi2002coherence}; VaR is not sub-additive.
+        \item VaR is elicitable; ES is not on its own \citep{gneiting2011making} but (VaR, ES) is jointly \citep{fissler2016higher}.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \textbf{FRTB internal models} \citep{bcbs2023mar33}:
+      \begin{itemize}
+        \item ES at 97.5\%, base horizon 10 days;
+        \item liquidity horizons 10, 20, 40, 60, 120 days, combined by a cascade formula;
+        \item calibrated to stress through a reduced factor set explaining $\ge 75\%$ of ES;
+        \item multiplier 1.5 plus a backtesting add-on up to 0.5.
+      \end{itemize}
+      In the EU these rules apply from 1 January 2027.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Estimators against a known truth}
+  \centering
+  \includegraphics[width=0.82\textwidth]{fig01_estimators.png}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \footnotesize
+      GARCH-t returns ($\nu = 5$), 500-day windows. (a) HS lags volatility; filtered HS follows it. (b) $\EOneR$ windows: RMSE of $\ln(\hat\ES_{97.5}/\ES_{97.5})$ is $\EOneRmseESHS$ for HS and $\EOneRmseESFHS$ for filtered HS.
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \footnotesize
+      Square-root-of-time scaling of 1-day to 10-day ES under GARCH-t: true over scaled is $\ETwoLowT$ at half the average volatility and $\ETwoHighT$ at 2.5 times; i.i.d.\ $t_5$: $\ETwoIid$. Deep dive 1.
+    \end{column}
+  \end{columns}
+\end{frame}

@@ -1,0 +1,164 @@
+\documentclass[aspectratio=169,10pt]{beamer}
+\newcommand{\reporoot}{../..}
+\input{../preamble}
+
+\title{Monte Carlo Methods for Risk}
+\subtitle{Nested simulation, importance sampling and quasi-Monte Carlo}
+\decknumber{7}
+
+\begin{document}
+
+\maketitle
+
+\begin{frame}{The question}
+  \small
+  \begin{columns}[T]
+    \begin{column}{0.55\textwidth}
+      Most risk numbers are Monte Carlo estimates, and Monte Carlo has its own error. \hl{How should a fixed computing budget be spent, and how small can the error be made?}
+      \begin{itemize}
+        \item Tail probabilities are rare events: plain sampling wastes most scenarios.
+        \item Portfolios of derivatives need a valuation inside every scenario: simulation inside simulation.
+        \item Smooth expectations converge faster with well-spread points than with random ones.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.42\textwidth}
+      \begin{alertblock}{In this deck}
+        \small
+        \begin{enumerate}
+          \item Monte Carlo error.
+          \item Nested simulation: outer versus inner samples.
+          \item Importance sampling for tails.
+          \item Quasi-Monte Carlo.
+        \end{enumerate}
+      \end{alertblock}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Simulation inside simulation, and better-spread points}
+  \centering
+  \includegraphics[width=0.95\textwidth,height=0.54\textheight,keepaspectratio]{gallery/g07_monte_carlo.png}\par\vspace{0.4em}
+  \footnotesize\raggedright
+  (a) Nested simulation of an underlying price $S_t$: outer scenarios up to a three-month horizon, then inner paths that reprice the position in each one. (b, c) 512 random and 512 scrambled Sobol points $(u_1, u_2)$ in the unit square, coloured by draw order. The Sobol points fill the square evenly; their L$_2$-star discrepancy is \GalSevenDiscRatio{} times smaller.
+\end{frame}
+
+\begin{frame}{Monte Carlo error, and why tails are hard}
+  \small
+  Estimating $\mu = \E[f(X)]$ by the mean of $n$ independent draws has standard error $s/\sqrt n$, with $s$ the standard deviation of $f(X)$ \citep{glasserman2003monte}.
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \textbf{Tail probability} $\alpha = P(L > c)$: indicator with variance $\alpha(1 - \alpha)$, so the relative error is
+      \[ \sqrt{\frac{1 - \alpha}{\alpha\,n}} \approx \frac{1}{\sqrt{\alpha n}} . \]
+      For 10\% relative error at $\alpha = 10^{-4}$ we need $10^6$ scenarios.
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \textbf{Quantiles} inherit this: the error of an estimated VaR scales like $\sqrt{\alpha(1-\alpha)/n}$ divided by the loss density at the quantile, which is small in the tail.
+      \vspace{0.3em}
+
+      Every simulated risk number in a validation report needs its Monte Carlo error next to it.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Nested simulation}
+  \small
+  Risk at horizon $\tau$ of a derivatives portfolio needs its value $V_\tau$ in each outer scenario, which is itself an expectation. With $m$ outer scenarios and $n$ inner draws each, $\hat V_\tau = V_\tau + \text{noise}$ with variance $s^2/n$.
+  \begin{columns}[T]
+    \begin{column}{0.52\textwidth}
+      \citet{gordy2010nested}: for $\alpha = P(L > c)$ the inner noise biases the estimate by about $\theta/n$, and the outer sampling adds variance $\alpha(1-\alpha)/m$. With budget $k = mn$,
+      \[ \mathrm{MSE} \approx \frac{\theta^2}{n^2} + \frac{\alpha(1-\alpha)\,n}{k}, \]
+      minimized at $n \propto k^{1/3}$, so the best RMSE falls like $k^{-1/3}$, not $k^{-1/2}$.
+    \end{column}
+    \begin{column}{0.45\textwidth}
+      \textbf{Test portfolio.} A long one-year at-the-money call (Black-Scholes, $\sigma = 25\%$, $r = 2\%$), one-week horizon; $c = \EFourteenC$ is the exact 1\% loss level. The exact inner value is known, so the bias is measurable.
+      \vspace{0.3em}
+
+      A small inner sample overstates tail probabilities: noise widens the loss distribution.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Splitting the budget}
+  \centering
+  \includegraphics[width=0.86\textwidth]{fig14_nested.png}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \footnotesize
+      (a) RMSE of $\hat P(L > c)$ (true 1\%) against the inner sample size, 100 replications per point. With $n = 8$ the estimate is off by $\EFourteenBiasEight$ percentage points: inner noise swamps the one-week loss. The best $n$ rises from $\EFourteenBestNSmall$ to $\EFourteenBestNLarge$ as the budget grows 16-fold.
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \footnotesize
+      (b) Best RMSE against the budget, three budgets: fitted slope $\EFourteenSlope$. The asymptotic rate is $-1/3$; with $n$ restricted to powers of two and 100 replications, the optimum is located only roughly, so this slope is a coarse check.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Importance sampling and quasi-Monte Carlo}
+  \small
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \textbf{Importance sampling.} Sample from a density $g$ that makes the event common and reweight by $f/g$. For $P(X > c)$, $X \sim \mathcal N(0,1)$, sample $X \sim \mathcal N(c, 1)$:
+      \[ \hat\alpha = \frac1n\sum \mathbf{1}\{X_i > c\}\,e^{-cX_i + c^2/2}. \]
+      The relative error stays bounded as $c$ grows. Portfolio credit risk uses the same idea with a factor shift and a twist (deck 4).
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \textbf{Quasi-Monte Carlo.} Replace random points by low-discrepancy points (Sobol). Randomized (scrambled) points keep unbiasedness and give an error estimate from independent replications. For smooth integrands the error can fall close to $n^{-1}$, against $n^{-1/2}$.
+      \vspace{0.3em}
+
+      Test: arithmetic basket call on five correlated assets.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Variance reduction in numbers}
+  \centering
+  \includegraphics[width=0.86\textwidth]{fig15_variance_reduction.png}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \footnotesize
+      (a) $10^5$ samples, 50 replications. At $c = 4$ ($\alpha \approx 3\times10^{-5}$) plain Monte Carlo has relative error $\EFifteenRelMcFour\%$, importance sampling $\EFifteenRelIsFour\%$; at $c = 6$ importance sampling still gives $\EFifteenRelIsSix\%$, where plain Monte Carlo sees no hits at all.
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \footnotesize
+      (b) Basket price $\EFifteenRef$. Fitted error slopes: Monte Carlo $\EFifteenSlopeM$, scrambled Sobol $\EFifteenSlopeQ$. At $2^{16}$ points Sobol is $\EFifteenGain$ times more accurate.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Discussion and takeaways}
+  \small
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \textbf{What the experiments show}
+      \begin{itemize}
+        \item In nested simulation, too few inner samples bias tail risk upward, and the optimal split follows $k^{1/3}$.
+        \item Importance sampling makes rare-event estimates feasible; its quality depends on choosing the right change of measure.
+        \item Quasi-Monte Carlo speeds up smooth expectations, such as prices and expected exposures, more than tail indicators.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \textbf{For a risk engine}
+      \begin{enumerate}
+        \item Report Monte Carlo error with every risk number.
+        \item For nested problems, tune the inner sample size, or replace inner simulation by a regression proxy and validate it.
+        \item Use importance sampling for 99.9\% credit and operational capital.
+      \end{enumerate}
+      \textbf{Open question.} Error bounds for machine-learned pricing proxies inside risk engines.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Reproduce}
+  \small
+  Code: \texttt{montecarlo.py}. Experiments: \texttt{e14\_nested.py}, \texttt{e15\_variance\_reduction.py}.
+\begin{verbatim}
+from stochastic_risk import montecarlo as mc
+c = mc.loss_threshold(0.01, S0=100, K=100, r=0.02, sigma=0.25, T=1.0, tau=1/52)
+mc.nested_tail_probability(m=4096, n=64, c=c, S0=100, K=100, r=0.02,
+                           sigma=0.25, T=1.0, tau=1/52)
+mc.gaussian_tail_is(c=4.0, n=100000)
+\end{verbatim}
+\end{frame}
+
+\deckreferences
+\end{document}

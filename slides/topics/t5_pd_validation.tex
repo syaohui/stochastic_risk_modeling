@@ -1,0 +1,158 @@
+\documentclass[aspectratio=169,10pt]{beamer}
+\newcommand{\reporoot}{../..}
+\input{../preamble}
+
+\title{Validating Probability-of-Default Models}
+\subtitle{Discrimination, calibration and stability, and why correlated defaults matter}
+\decknumber{5}
+
+\begin{document}
+
+\maketitle
+
+\begin{frame}{The question}
+  \small
+  \begin{columns}[T]
+    \begin{column}{0.55\textwidth}
+      A rating model assigns each borrower a PD. Every year the validation function checks it against realized defaults. \hl{Do the standard tests mean what their p-values say?}
+      \begin{itemize}
+        \item Discrimination: does the model rank defaulters above non-defaulters?
+        \item Calibration: are the PDs right on average, by grade?
+        \item Stability: is today's population like the development sample?
+      \end{itemize}
+      Defaults in one year share the economy, so they are not independent. Most textbook tests assume they are.
+    \end{column}
+    \begin{column}{0.42\textwidth}
+      \begin{alertblock}{In this deck}
+        \small
+        \begin{enumerate}
+          \item AUC, Gini and the DeLong error.
+          \item Binomial and Jeffreys tests.
+          \item What correlation does to their size.
+          \item Small samples: AUC intervals and PSI alarms.
+        \end{enumerate}
+      \end{alertblock}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{One rating model, many possible validation samples}
+  \centering
+  \includegraphics[width=0.95\textwidth,height=0.54\textheight,keepaspectratio]{gallery/g05_pd_validation.png}\par\vspace{0.4em}
+  \footnotesize\raggedright
+  (a, b) 150 simulated ROC curves (blue) around the true curve (red), with 10 and 100 defaults and 50 non-defaulters per default. (c) Sampling densities of the AUC (true 0.76): the central 90\% range is \GalFiveLoTen{} to \GalFiveHiTen{} with 10 defaults and \GalFiveLoHundred{} to \GalFiveHiHundred{} with 100.
+\end{frame}
+
+\begin{frame}{Discrimination}
+  \small
+  Scores $S$ with higher meaning riskier; $n_D$ defaulters and $n_N$ non-defaulters.
+  \[ \mathrm{AUC} = P(S_D > S_N) + \tfrac12 P(S_D = S_N), \qquad \mathrm{Gini} = 2\,\mathrm{AUC} - 1, \]
+  estimated by the Mann-Whitney statistic.
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \textbf{DeLong standard error} \citep{delong1988comparing}. With $\psi(x,y) = \mathbf{1}\{x > y\} + \tfrac12\mathbf{1}\{x = y\}$, define for each defaulter $V_{10,i} = \frac{1}{n_N}\sum_j \psi(S_{D,i}, S_{N,j})$ and for each non-defaulter $V_{01,j} = \frac{1}{n_D}\sum_i \psi(S_{D,i}, S_{N,j})$. Then
+      \[ \widehat{\Var}(\mathrm{AUC}) = \frac{s_{10}^2}{n_D} + \frac{s_{01}^2}{n_N}, \]
+      with $s^2$ the sample variances.
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \textbf{Supervisory use.} The ECB's validation reporting compares the current AUC with the AUC at initial validation by a test based on a normal approximation, with the Mann-Whitney definition \citep{ecb2019validation}.
+      \vspace{0.3em}
+
+      Few defaults make the AUC noisy: low-default portfolios are where this matters.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Calibration tests}
+  \small
+  A grade with $N$ obligors, $D$ defaults in the year and assigned PD $p$.
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \textbf{Binomial test.} p-value $P(\mathrm{Bin}(N, p) \ge D)$.
+      \vspace{0.3em}
+
+      \textbf{Jeffreys test} \citep{ecb2019validation}. With the Jeffreys prior the default rate has posterior $\mathrm{Beta}(D + \tfrac12, N - D + \tfrac12)$; the p-value is its distribution function at $p$. Small values say $p$ is too low. The ECB applies it per grade and to the portfolio, under a binomial model with independent observations.
+      \vspace{0.3em}
+
+      \textbf{Hosmer-Lemeshow} over $G$ grades: $\sum_g \frac{(D_g - N_g p_g)^2}{N_g p_g(1-p_g)} \sim \chi^2_G$.
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \textbf{Correlation-adjusted test.} If defaults follow the one-factor model with asset correlation $\rho$ (deck 4), then
+      \[ P(D' \ge D) = \int P\big(\mathrm{Bin}(N, p(y)) \ge D\big)\,h(y)\,\dd y, \]
+      with $p(y)$ the conditional PD and $h$ the normal density. This repository computes it exactly by quadrature.
+      \vspace{0.3em}
+
+      The question is how often the independent-default tests reject a correct PD when $\rho > 0$.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Correct PDs, correlated defaults}
+  \centering
+  \includegraphics[width=0.86\textwidth]{fig10_calibration_tests.png}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \footnotesize
+      (a) $N = 1{,}000$, PD 1\%, exact probabilities. With $\rho = 0$ the binomial test rejects $\ETenSizeBinZero\%$ (the test is discrete). At $\rho = 0.12$: binomial $\ETenSizeBin\%$, Jeffreys $\ETenSizeJef\%$, correlation-adjusted $\ETenSizeAdj\%$. The binomial test rejects at $D \ge \ETenDcritBin$, the adjusted one at $D \ge \ETenDcritAdj$.
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \footnotesize
+      (b) True PD twice the assigned PD, $\rho = 0.12$: the binomial test rejects $\ETenPowBin\%$, the adjusted test $\ETenPowAdj\%$. Honest size costs power: one year of defaults cannot reliably tell 1\% from 2\% once correlation is admitted.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Small samples: AUC intervals and stability alarms}
+  \centering
+  \includegraphics[width=0.86\textwidth]{fig11_discrimination.png}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \footnotesize
+      (a) Binormal scores, true AUC 0.760, 50 non-defaulters per default. The 95\% DeLong interval covers $\EElevenCoverTen\%$ of the time with 10 defaults (AUC standard deviation $\EElevenSdTen$) and $\EElevenCoverHundred\%$ with 100.
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \footnotesize
+      (b) Population stability index $\mathrm{PSI} = \sum_k (a_k - e_k)\ln(a_k/e_k)$ over 10 bins, no shift at all. A sample of 100 exceeds the common 0.10 alarm level $\EElevenFaHundred\%$ of the time (200: $\EElevenFaTwoHundred\%$). The $\chi^2_9$ approximation $(1/n + 1/n_{dev})\chi^2_9$ tracks it.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Discussion and takeaways}
+  \small
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \textbf{What the experiments show}
+      \begin{itemize}
+        \item Tests that assume independent defaults over-reject correct PDs once defaults are correlated, by a large factor at realistic correlations.
+        \item The correlation-adjusted test has the right size but little power with one year of data: calibration evidence must accumulate over years.
+        \item DeLong intervals work well once there are a few dozen defaults.
+        \item Fixed PSI thresholds are sample-size dependent: small samples raise false alarms.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \textbf{For a validation function}
+      \begin{enumerate}
+        \item Read a binomial or Jeffreys rejection as ``look closer'', not as proof, in a correlated portfolio.
+        \item Report the correlation-adjusted p-value alongside.
+        \item Scale PSI thresholds with sample size, or use its $\chi^2$ distribution.
+      \end{enumerate}
+      \textbf{Assumptions.} One-factor default dependence; one grade; one year. Multi-year tests and rating migration are the natural extensions.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Reproduce}
+  \small
+  Code: \texttt{pd\_validation.py}. Experiments: \texttt{e10\_calibration\_tests.py}, \texttt{e11\_discrimination.py}.
+\begin{verbatim}
+from stochastic_risk import pd_validation as pv
+pv.auc(scores_default, scores_nondefault); pv.delong_se(...)
+pv.binomial_pvalue(d=15, n=1000, pd=0.01)
+pv.jeffreys_pvalue(d=15, n=1000, pd=0.01)
+pv.vasicek_pvalue(d=15, n=1000, pd=0.01, rho=0.12)
+pv.psi(expected_counts, actual_counts)
+\end{verbatim}
+\end{frame}
+
+\deckreferences
+\end{document}

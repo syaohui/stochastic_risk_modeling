@@ -1,0 +1,76 @@
+\section{The repository}
+
+\begin{frame}{Deep dives: one deck per topic}
+  \small
+  Each deck goes from the question to the model and its math, the statistics, figures from this code, published rules and research, and takeaways. PDFs in \texttt{slides/decks/}.
+  \vspace{0.2em}
+
+  \scriptsize
+  \begin{tabular}{rL{0.22\textwidth}L{0.64\textwidth}}
+    \toprule
+    & Deck & What it adds \\
+    \midrule
+    1 & VaR and ES & FRTB rules; five estimators against a known truth; time scaling \\
+    2 & Backtesting & traffic-light probabilities; small-sample test size; ES test power; PLA zones \\
+    3 & Model risk & SR 26-2; exact exceedance of estimated VaR; ES error bars; worst cases; challengers \\
+    4 & Credit portfolio & IRB formula; granularity correction; copulas; importance sampling \\
+    5 & PD validation & AUC and DeLong; binomial and Jeffreys tests under correlation; PSI alarms \\
+    6 & Counterparty risk & Hull-White exposures; exact swaption check; wrong-way CVA \\
+    7 & Monte Carlo & nested simulation budget; importance sampling; quasi-Monte Carlo \\
+    8 & Operational risk & FFT and Panjer; single-loss approximation; capital uncertainty; EVT \\
+    9 & Stress testing & reverse stress tests; regimes; FRTB indirect calibration; generative scenarios \\
+    \bottomrule
+  \end{tabular}
+\end{frame}
+
+\begin{frame}[fragile]{Everything here is reproducible}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \small
+      \textbf{Package} \texttt{stochastic\_risk}, NumPy and SciPy only: \texttt{measures}, \texttt{volatility}, \texttt{evt}, \texttt{backtest}, \texttt{model\_risk}, \texttt{credit}, \texttt{pd\_validation}, \texttt{ccr}, \texttt{montecarlo}, \texttt{oprisk}, \texttt{stress}.
+      \vspace{0.3em}
+
+      \textbf{Tests} (24): each closed form or estimator against an independent result.
+
+      \textbf{Experiments} (19): each has a compute step that saves raw arrays and a plot step that writes the figure and the numbers these slides read.
+
+      \textbf{Gallery and animations}: one showcase figure per topic and five GIFs of the simulations in \texttt{figures/}.
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \scriptsize
+\begin{verbatim}
+pip install -e ".[test]"
+python -m pytest tests
+cd experiments
+python run_all.py --compute --jobs 16
+python run_all.py --plot
+cd .. && python build_slides.py
+\end{verbatim}
+      \small
+      Fixed random seeds. The compute step is about half an hour of CPU time; on a 16-core cluster node it took eight minutes.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Verification summary}
+  \footnotesize
+  \begin{tabular}{L{0.4\textwidth}L{0.3\textwidth}L{0.2\textwidth}}
+    \toprule
+    Result & Check & Agreement \\
+    \midrule
+    Empirical VaR, ES & normal and $t$ closed forms & 1\% to 2\% \\
+    FRTB liquidity cascade & independent Gaussian classes & exact \\
+    Plug-in VaR exceedance (Student $t$ law) & Monte Carlo & within 4 s.e. \\
+    HS order-statistic exceedance & normal and $t_3$ losses & within 0.15 points \\
+    Relative-entropy worst-case ES & Gaussian closed form & $\ESevenWcErr$ \\
+    $Z_2$ critical values & published $-0.7$, $-1.8$ & $\EFourCritFive$, $\EFourCritTiny$ \\
+    IRB capital & reference value & $10^{-5}$ \\
+    Granularity correction & exact binomial mixture & closer than ASRF \\
+    Importance sampling & exact binomial mixture & within 4 s.e. \\
+    Hull-White bonds and swaptions & martingale; Jamshidian & $2\times10^{-4}$; $\le\ETwelveMaxZ$ s.e. \\
+    Nested simulation & exact Black-Scholes & converges \\
+    FFT compound Poisson & Panjer recursion; Monte Carlo & $10^{-10}$; 2\% \\
+    Reverse stress scenario & conditional Monte Carlo mean & $\EEighteenMcErr$ \\
+    \bottomrule
+  \end{tabular}
+\end{frame}

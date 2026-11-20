@@ -1,0 +1,152 @@
+\documentclass[aspectratio=169,10pt]{beamer}
+\newcommand{\reporoot}{../..}
+\input{../preamble}
+
+\title{Operational Risk and Extreme Values}
+\subtitle{The loss distribution approach, the single-loss approximation, and tail estimation}
+\decknumber{8}
+
+\begin{document}
+
+\maketitle
+
+\begin{frame}{The question}
+  \small
+  \begin{columns}[T]
+    \begin{column}{0.55\textwidth}
+      Fraud, outages, legal settlements: a few huge losses dominate the total. \hl{How do we estimate a one-in-a-thousand-year annual loss from a few hundred recorded events, and how sure can we be?}
+      \begin{itemize}
+        \item Heavy tails make the largest loss the main driver of the annual total.
+        \item Extreme value theory tells us how to extrapolate beyond the data, and how uncertain that is.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.42\textwidth}
+      \begin{alertblock}{In this deck}
+        \small
+        \begin{enumerate}
+          \item The loss distribution approach.
+          \item Exact compound distributions: FFT and Panjer.
+          \item The single-loss approximation.
+          \item Capital estimation risk.
+          \item Peaks over threshold and the Hill estimator.
+        \end{enumerate}
+      \end{alertblock}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Operational losses: one year, and a million years}
+  \centering
+  \includegraphics[width=0.95\textwidth,height=0.54\textheight,keepaspectratio]{gallery/g08_operational_risk.png}\par\vspace{0.4em}
+  \footnotesize\raggedright
+  (a) One simulated year with 25 losses a year on average and lognormal sizes (log-mean 10, log-standard deviation $\sigma = 2$): the largest of its \GalEightEvents{} losses is \GalEightShare\% of the year's total. Grey: 39 other years. (b) Annual loss distributions for $\sigma$ from 1.0 to 2.6, one million simulated years each, on log scales; red is the tail beyond the 99.9\% quantile.
+\end{frame}
+
+\begin{frame}{The loss distribution approach}
+  \small
+  Annual loss $S = X_1 + \dots + X_N$, with frequency $N \sim \mathrm{Poisson}(\lambda)$ (events per year) and i.i.d.\ severities $X_k$ (currency) with distribution function $F$, independent of $N$.
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \textbf{Exact distribution.} Discretize $F$ on a grid of span $h$ and compute the compound Poisson law by the fast Fourier transform,
+      \[ f_S = \mathrm{IFFT}\big(\exp(\lambda(\mathrm{FFT}(f_X) - 1))\big), \]
+      with zero padding against wrap-around. Panjer's recursion
+      \[ f_S(k) = \frac{\lambda}{k}\sum_{j=1}^{k} j\,f_X(j)\,f_S(k-j) \]
+      gives the same numbers (tested to $10^{-10}$).
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \textbf{Single-loss approximation} \citep{bocker2005operational}. For subexponential (heavy-tailed) severities,
+      \[ \VaR_\alpha(S) \approx F^{-1}\!\left(1 - \frac{1-\alpha}{\lambda}\right) \quad (\alpha \to 1): \]
+      at very high levels the annual total is large because one loss is. The capital is a severity quantile, so its accuracy hinges on the severity tail.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{How good is the approximation, and how stable is the capital?}
+  \centering
+  \includegraphics[width=0.86\textwidth]{fig16_lda.png}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \footnotesize
+      (a) $\lambda = 25$ a year, lognormal severities with $\mu = 10$. At 99.9\% the approximation over the exact value is $\ESixteenSlaOneFive$ ($\sigma = 1.5$), $\ESixteenSlaTwoNine$ ($\sigma = 2$) and $\ESixteenSlaTwoFive$ ($\sigma = 2.5$); at 99\% and $\sigma = 2$, $\ESixteenSlaTwoTwo$. It improves with the level and with tail heaviness, and errs on the low side.
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \footnotesize
+      (b) True model $\sigma = 2$; the bank fits a lognormal to $n$ observed losses and computes 99.9\% capital by the SLA ($\ESixteenTrue$ million at the true parameters). The 90\% range of the estimate over that value is $\ESixteenLoHundred$ to $\ESixteenHiHundred$ with $n = 100$ and $\ESixteenLoThousand$ to $\ESixteenHiThousand$ with $n = 1{,}000$, with the model correctly specified.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Extreme value theory}
+  \small
+  \begin{columns}[T]
+    \begin{column}{0.52\textwidth}
+      \textbf{Peaks over threshold.} Excesses $Y = L - u$ over a high threshold $u$ are approximately generalized Pareto,
+      \[ P(Y \le y) = 1 - (1 + \xi y/\beta)^{-1/\xi}, \]
+      shape $\xi$ (tail index; $\xi > 0$ for heavy tails), scale $\beta$ (loss units). With $N_u$ of $n$ losses above $u$,
+      \[ \VaR_\alpha = u + \frac{\beta}{\xi}\left[\left(\frac{n(1-\alpha)}{N_u}\right)^{-\xi} - 1\right] \]
+      \citep{mcneil2015quantitative}.
+    \end{column}
+    \begin{column}{0.45\textwidth}
+      \textbf{Hill estimator} from the $k$ largest losses,
+      \[ \hat\xi = \frac1k\sum_{i=1}^{k}\ln X_{(n-i+1)} - \ln X_{(n-k)} , \]
+      for Pareto-type tails.
+      \vspace{0.3em}
+
+      \textbf{The trade-off.} A high threshold (small $k$) keeps the model accurate but leaves few points; a low one adds points the model does not describe. There is no automatic answer.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Estimating a 99.9\% quantile}
+  \centering
+  \includegraphics[width=0.86\textwidth]{fig17_evt.png}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \footnotesize
+      (a) Student $t_3$ losses ($\xi = 1/3$), 1,000 samples per size. RMSE of $\ln(\hat\VaR/\VaR)$ at $n = 1{,}000$: empirical $\ESeventeenEmpThousand$, normal fit $\ESeventeenNormThousand$, POT at the 90\% threshold $\ESeventeenPotThousand$. At $n = 250$: empirical $\ESeventeenEmpQuarter$, POT $\ESeventeenPotQuarter$.
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \footnotesize
+      (b) One sample of 2,500: the Hill estimate moves from $\ESeventeenHillSmall$ (30 points) to $\ESeventeenHillLarge$ (1,000 points), against the true 0.33. Using too much of the sample biases $\hat\xi$, because the body of a $t$ distribution is not Pareto.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Discussion and takeaways}
+  \small
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \textbf{What the experiments show}
+      \begin{itemize}
+        \item The single-loss approximation is a good capital proxy at 99.9\% for heavy tails, and understates at lower levels.
+        \item Even a correctly specified severity model gives 99.9\% capital that varies by a factor of several across samples of realistic size.
+        \item A normal model is wrong by a large factor in heavy tails; EVT helps but needs a threshold choice.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \textbf{For an operational risk modeler}
+      \begin{enumerate}
+        \item Report capital with an interval, from bootstrap or from the estimator's sampling distribution.
+        \item Show threshold sensitivity (Hill or GPD-shape plots) in every EVT fit.
+        \item Use the exact FFT distribution to check approximations.
+      \end{enumerate}
+      \textbf{Open question.} Combining internal losses, external data and scenarios into one tail estimate with honest uncertainty.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Reproduce}
+  \small
+  Code: \texttt{oprisk.py}, \texttt{evt.py}. Experiments: \texttt{e16\_lda.py}, \texttt{e17\_evt.py}.
+\begin{verbatim}
+from stochastic_risk import oprisk as op, evt
+fx = op.discretize(severity_cdf, h, n)
+fs = op.compound_poisson_fft(lam=25, fx=fx)
+op.sla_var(0.999, lam=25, severity_ppf=ppf)
+evt.pot_var_es(losses, alpha=0.999, threshold_quantile=0.9)
+evt.hill(losses, k=200)
+\end{verbatim}
+\end{frame}
+
+\deckreferences
+\end{document}

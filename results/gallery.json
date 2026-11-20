@@ -1,0 +1,19 @@
+{
+  "GalOneExceptions": "4",
+  "GalOneVolRatio": "5.2",
+  "GalTwoPowTwoFifty": "38",
+  "GalTwoNEighty": "1{,}000",
+  "GalFourJointGauss": "161",
+  "GalFourJointT": "255",
+  "GalFiveLoTen": "0.63",
+  "GalFiveHiTen": "0.88",
+  "GalFiveLoThirty": "0.69",
+  "GalFiveHiThirty": "0.83",
+  "GalFiveLoHundred": "0.72",
+  "GalFiveHiHundred": "0.80",
+  "GalSevenDiscRatio": "2.9",
+  "GalEightEvents": "20",
+  "GalEightShare": "34",
+  "GalNineDCalm": "2.18",
+  "GalNineDStress": "1.96"
+}

@@ -1,0 +1,64 @@
+\section{Counterparty risk and Monte Carlo methods}
+
+\begin{frame}{Exposure is a distribution that moves in time}
+  \centering
+  \includegraphics[width=0.95\textwidth,height=0.54\textheight,keepaspectratio]{gallery/g06_counterparty.png}\par\vspace{0.4em}
+  \footnotesize\raggedright
+  (a) 120 Hull-White paths of the value $V(t)$ of a five-year payer swap (coloured by the value at year 2), with expected exposure and the 97.5\% PFE from 20,000 paths. (b) The distribution of $V(t)$ every quarter; orange is the exposure $V^+ = \max(V, 0)$. It widens with time and narrows at each payment date.
+\end{frame}
+
+\begin{frame}{Exposure simulation, checked against closed forms}
+  \centering
+  \includegraphics[width=0.82\textwidth]{fig12_exposure.png}
+  \footnotesize
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      (a) Five-year swap under Hull-White \citep{brigo2006interest}: payer expected exposure peaks at $\ETwelvePeakEE\%$ of notional, the 97.5\% PFE at $\ETwelvePeakPFE\%$; EAD $= 1.4 \times$ EEPE $= \ETwelveEAD\%$.
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      (b) At reset dates the discounted expected exposure is a swaption price; simulation matches the closed form within $\ETwelveMaxZ$ standard errors.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{CVA and wrong-way risk}
+  \centering
+  \includegraphics[width=0.82\textwidth]{fig13_cva_wwr.png}
+  \footnotesize
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      Hazard rate tied to exposure \citep{hull2012cva}, calibrated to the same credit curve. (a) With $b = 0.3$ the payer CVA is $\EThirteenWwrPay$ times the independent value; with $b = -0.3$, $\EThirteenRwrPay$ times.
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      (b) Wrong-way risk shifts CVA toward the dates where exposure is high on the paths that default. Deep dive 6.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Nested simulation: spending a budget}
+  \centering
+  \includegraphics[width=0.82\textwidth]{fig14_nested.png}
+  \footnotesize
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      Tail risk of an option portfolio needs a valuation inside every scenario \citep{gordy2010nested}. (a) Too few inner samples bias the tail probability upward: off by $\EFourteenBiasEight$ points with 8 inner draws (true 1\%).
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      (b) The best RMSE over three budgets falls with fitted slope $\EFourteenSlope$; the asymptotic rate is $-1/3$, not the $-1/2$ of ordinary Monte Carlo.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Variance reduction}
+  \centering
+  \includegraphics[width=0.82\textwidth]{fig15_variance_reduction.png}
+  \footnotesize
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      (a) Importance sampling keeps the relative error near $\EFifteenRelIsFour\%$ for a Gaussian tail at $3\times10^{-5}$, where plain Monte Carlo has $\EFifteenRelMcFour\%$.
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      (b) Scrambled Sobol points price a basket option with error slope $\EFifteenSlopeQ$ against $\EFifteenSlopeM$ for random points. Deep dive 7.
+    \end{column}
+  \end{columns}
+\end{frame}

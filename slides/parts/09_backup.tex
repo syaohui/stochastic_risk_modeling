@@ -1,0 +1,29 @@
+\section{Backup: derivations}
+
+\begin{frame}{Backup: exceedance of estimated VaR}
+  \small
+  \textbf{Normal plug-in.} $L_1,\dots,L_{n+1}$ i.i.d.\ $\mathcal N(\mu,\sigma^2)$. Then $L_{n+1} - \bar L \sim \mathcal N(0, \sigma^2(1 + 1/n))$, independent of $s^2$, and $(n-1)s^2/\sigma^2 \sim \chi^2_{n-1}$. Hence
+  \[ T = \frac{L_{n+1} - \bar L}{s\sqrt{1 + 1/n}} \sim t_{n-1}, \qquad P(L_{n+1} > \bar L + s z_\alpha) = P\big(T > z_\alpha/\sqrt{1+1/n}\big). \]
+  Since $t_{n-1}$ has heavier tails than the normal and $z_\alpha/\sqrt{1+1/n} < z_\alpha$, the probability exceeds $1-\alpha$.
+  \vspace{0.4em}
+
+  \textbf{Historical simulation.} With $U_i = F(L_i)$ i.i.d.\ uniform for continuous $F$, $P(L_{n+1} > L_{(k)} \mid L_{(k)}) = 1 - U_{(k)}$ and $\E[U_{(k)}] = k/(n+1)$, so the mean exceedance is $(n+1-k)/(n+1)$, whatever $F$ is.
+\end{frame}
+
+\begin{frame}{Backup: the FRTB cascade, and granularity}
+  \small
+  \textbf{Cascade.} Let class $k$ have liquidity horizon $LH_k$ and independent Gaussian 10-day P\&L with standard deviation $s_k$, and $c = \varphi(z)/(1-\alpha)$. Then $\ES_T(P,j)^2 = c^2\sum_{k: LH_k \ge LH_j}s_k^2$ and
+  \[ \ES^2 = c^2\sum_k s_k^2\Big(1 + \sum_{j \ge 2,\,LH_j \le LH_k}\tfrac{LH_j - LH_{j-1}}{T}\Big) = c^2\sum_k s_k^2\,\frac{LH_k}{T}, \]
+  the ES of independent classes each scaled to its own horizon. Correlations between classes break this identity.
+  \vspace{0.3em}
+
+  \textbf{Granularity.} For $L = X + \epsilon$ with $X = m(Y)$ and $\Var(\epsilon \mid Y) = v(Y)$, the second-order expansion of the quantile is $\VaR_q(L) \approx \VaR_q(X) - \frac{1}{2f_X(x)}\frac{\dd}{\dd x}[f_X(x)\,\sigma^2(x)]$ at $x = \VaR_q(X)$, with $\sigma^2(x) = \Var(L \mid X = x)$. Substituting $x = m(y)$, $f_X(x) = h(y)/m'(y)$ and $\dd/\dd x = (1/m'(y))\,\dd/\dd y$ gives the factor-space formula of deck 4.
+\end{frame}
+
+\begin{frame}{Backup: reverse stress test and nested simulation}
+  \small
+  \textbf{Reverse stress.} Minimize $x^\top\Sigma^{-1}x$ subject to $w^\top x = -\ell$. The Lagrangian gives $2\Sigma^{-1}x = \mu w$, so $x = \tfrac{\mu}{2}\Sigma w$, and the constraint fixes $\mu/2 = -\ell/(w^\top\Sigma w)$. The minimum distance is $\ell/\sqrt{w^\top\Sigma w}$. For Gaussian $x$, $\E[x \mid w^\top x] = \Sigma w\,(w^\top x)/(w^\top\Sigma w)$, the same point.
+  \vspace{0.4em}
+
+  \textbf{Nested simulation.} With inner noise of variance $s^2/n$, the estimated loss distribution is the true one convolved with that noise, so $P(\hat L > c) - P(L > c) \approx \theta/n$ for a constant $\theta$ set by the loss density and its derivative at $c$. Adding the outer variance $\alpha(1-\alpha)/m$ with $m = k/n$ and minimizing over $n$ gives $n^* = (2\theta^2 k/\alpha(1-\alpha))^{1/3}$ and an MSE of order $k^{-2/3}$ \citep{gordy2010nested}.
+\end{frame}

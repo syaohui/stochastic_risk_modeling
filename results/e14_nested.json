@@ -1,0 +1,9 @@
+{
+  "EFourteenC": "4.13",
+  "EFourteenBestNSmall": "512",
+  "EFourteenBestNLarge": "2048",
+  "EFourteenSlope": "-0.43",
+  "EFourteenBiasEight": "28.38",
+  "EFourteenRmseBest": "0.314",
+  "EFourteenRmseEight": "28.38"
+}

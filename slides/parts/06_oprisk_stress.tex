@@ -1,0 +1,71 @@
+\section{Operational risk and stress testing}
+
+\begin{frame}{Operational losses: one year, and a million years}
+  \centering
+  \includegraphics[width=0.95\textwidth,height=0.54\textheight,keepaspectratio]{gallery/g08_operational_risk.png}\par\vspace{0.4em}
+  \footnotesize\raggedright
+  (a) One simulated year with 25 losses a year on average and lognormal sizes (log-mean 10, log-standard deviation $\sigma = 2$): the largest of its \GalEightEvents{} losses is \GalEightShare\% of the year's total. Grey: 39 other years. (b) Annual loss distributions for $\sigma$ from 1.0 to 2.6, one million simulated years each, on log scales; red is the tail beyond the 99.9\% quantile.
+\end{frame}
+
+\begin{frame}{Operational losses: approximation and capital uncertainty}
+  \centering
+  \includegraphics[width=0.82\textwidth]{fig16_lda.png}
+  \footnotesize
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      Compound Poisson losses with lognormal severities. (a) The single-loss approximation $\VaR_\alpha \approx F^{-1}(1 - (1-\alpha)/\lambda)$ \citep{bocker2005operational}, with severity distribution $F$ and frequency $\lambda$, errs low and improves with the level: $\ESixteenSlaTwoNine$ of the exact FFT value at 99.9\% for $\sigma = 2$, $\ESixteenSlaTwoTwo$ at 99\%.
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      (b) With a correctly specified model fitted to 100 losses, the 90\% range of estimated 99.9\% capital is $\ESixteenLoHundred$ to $\ESixteenHiHundred$ times the value at the true parameters; with 1,000 losses, $\ESixteenLoThousand$ to $\ESixteenHiThousand$.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Extreme value estimation}
+  \centering
+  \includegraphics[width=0.82\textwidth]{fig17_evt.png}
+  \footnotesize
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      (a) Estimating a 99.9\% quantile of $t_3$ losses from 1,000 points: RMSE of the log ratio $\ESeventeenEmpThousand$ (empirical), $\ESeventeenPotThousand$ (peaks over threshold), $\ESeventeenNormThousand$ (normal fit).
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      (b) The Hill estimate of the tail index drifts from $\ESeventeenHillSmall$ to $\ESeventeenHillLarge$ as more of the sample is used (true 0.33). Deep dive 8.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Stress scenarios in three dimensions}
+  \centering
+  \includegraphics[width=0.95\textwidth,height=0.54\textheight,keepaspectratio]{gallery/g09_stress_testing.png}\par\vspace{0.4em}
+  \footnotesize\raggedright
+  (a) 3,000 scenarios of equity, rate and spread moves (standard deviations, calm correlations), coloured by portfolio loss, with the plane of scenarios that lose 4 units and the most likely one (star). Its Mahalanobis distance is \GalNineDCalm{}, or \GalNineDStress{} under stressed correlations. (b) 300 one-year paths of a ten-factor portfolio that switches between calm and stress regimes, coloured by the share of days in stress.
+\end{frame}
+
+\begin{frame}{Reverse stress testing}
+  \centering
+  \includegraphics[width=0.82\textwidth]{fig18_reverse_stress.png}
+  \footnotesize
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      (a) For a linear Gaussian portfolio with weights $w$ and factor covariance $\Sigma$, the most likely scenario behind a loss $\ell$ is $x^* = -\ell\,\Sigma w/(w^\top\Sigma w)$; Monte Carlo conditional means agree within $\EEighteenMcErr$.
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      (b) A loss of 6 units is $\EEighteenRatio$ times more likely under stressed correlations than calm ones.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Regimes and the FRTB stress calibration}
+  \centering
+  \includegraphics[width=0.82\textwidth]{fig19_regimes.png}
+  \footnotesize
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      (a) Rolling 250-day ES lags each regime change and stays high after the stress has passed.
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      (b) The FRTB indirect stress calibration \citep{bcbs2023mar33} is accurate when correlations are stable. When they rise in stress, a one-factor reduced set gives $\ENineteenRatioOne$ of the true stressed ES; the first set meeting the 75\% rule gives $\ENineteenRatioSeventyFive$. Deep dive 9.
+    \end{column}
+  \end{columns}
+\end{frame}
